@@ -4,24 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KodaCoin | Mis Gastos</title>
-    <!-- Agregamos Google Fonts con una tipografía redondeada -->
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="apple-touch-icon" href="kodacoin.png">
     <link rel="icon" type="image/png" href="kodacoin.png">
     <meta name="theme-color" content="#89c4f4">
     <style>
         :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
-        /* Aplicamos la fuente redondeada a todo */
         body { font-family: 'Quicksand', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
         .app-container { width: 100%; max-width: 480px; }
         .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: none; }
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
-        /* Inputs más redondeados */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: 'Quicksand', sans-serif; font-weight: 600; }
         button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; }
         button.btn-submit:active { transform: scale(0.98); }
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
+        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
         h1, h2, h3 { font-weight: 700; }
     </style>
 </head>
