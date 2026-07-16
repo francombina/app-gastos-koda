@@ -10,129 +10,69 @@
     <style>
         :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
         body { font-family: 'Quicksand', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
-        .app-container { width: 100%; max-width: 480px; }
-        .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: none; }
-        .summary-card { text-align: center; border: 2px solid var(--primary); }
-        .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
-        input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 16px; }
-        button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .app-container { width: 100%; max-width: 480px; padding-bottom: 80px; }
+        .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: 'Quicksand', sans-serif; font-size: 16px; }
+        button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; }
+        .page { display: none; } .active { display: block; }
+        .nav-menu { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; background: var(--card-bg); padding: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
+        .nav-btn { cursor: pointer; color: var(--text-muted); font-weight: 700; border: none; background: none; }
+        .nav-btn.active { color: var(--primary-dark); }
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
-        h1, h2, h3 { font-weight: 700; }
-        canvas { margin-top: 15px; }
     </style>
 </head>
 <body>
 <div class="app-container">
     <h1 style="text-align:center; color: var(--primary-dark);">KodaCoin 🐾</h1>
-    
-    <div class="card"><select id="month-filter"><option value="all">Ver todo el historial</option></select></div>
-    
-    <div class="card summary-card">
-        <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
-        <div class="balance-amount" id="balance-display">$0.00</div>
-    </div>
 
-    <div class="card">
+    <div id="page-form" class="page active card">
         <h2>Nuevo Gasto</h2>
         <form id="tx-form">
             <input type="date" id="date" required>
             <input type="text" id="desc" placeholder="Concepto" required>
-            <select id="category" required>
-                <option value="" disabled selected>Seleccionar categoría</option>
-                <option>Verdulería/Carniceria</option><option>Almuerzo oficina</option><option>Casa</option>
-                <option>Auto</option><option>Super</option><option>Delivery</option><option>Farmacia</option>
-                <option>Gastos varios</option><option>Comer afuera</option><option>Servicios</option>
-                <option>Recreacion</option><option>Regalos</option><option>Tarjeta de Credito</option>
-                <option>Transporte</option><option>Vacaciones</option><option>Suscripciones</option>
-                <option>Gimnasio/Salud</option><option>Panaderia</option><option>Koda</option>
-            </select>
-            <select id="account" required>
-                <option value="" disabled selected>Seleccionar cuenta</option>
-                <option>Personal Pay</option><option>Tarjeta de Credito</option><option>BBVA CA</option><option>Efectivo</option><option>MercadoPago</option>
-            </select>
+            <select id="category" required><option value="" disabled selected>Categoría</option><option>Verdulería/Carniceria</option><option>Auto</option><option>Super</option><option>Delivery</option><option>Servicios</option><option>Casa</option></select>
+            <select id="account" required><option value="" disabled selected>Cuenta</option><option>Personal Pay</option><option>Tarjeta de Credito</option><option>BBVA CA</option><option>Efectivo</option><option>MercadoPago</option></select>
             <input type="number" id="amount" placeholder="Monto" required>
-            <select id="payer" required>
-                <option value="" disabled selected>Quién pagó</option>
-                <option>Fran</option><option>Agus</option><option>Compartido</option>
-            </select>
+            <select id="payer" required><option value="" disabled selected>Quién pagó</option><option>Fran</option><option>Agus</option><option>Compartido</option></select>
             <button type="submit" class="btn-submit">Guardar Gasto</button>
         </form>
     </div>
 
-    <div class="card" id="analysis-section" style="display:none">
+    <div id="page-list" class="page card">
+        <select id="month-filter"><option value="all">Ver todo el historial</option></select>
+        <h2>Historial</h2>
+        <div id="tx-list"></div>
+    </div>
+
+    <div id="page-analysis" class="page card">
         <h2>Análisis</h2>
         <canvas id="chart-category"></canvas>
         <canvas id="chart-payer"></canvas>
         <canvas id="chart-method"></canvas>
     </div>
 
-    <div class="card">
-        <h2>Historial</h2>
-        <div id="tx-list">Cargando...</div>
+    <div class="nav-menu">
+        <button class="nav-btn active" onclick="showPage('page-form', this)">Nuevo</button>
+        <button class="nav-btn" onclick="showPage('page-list', this)">Historial</button>
+        <button class="nav-btn" onclick="showPage('page-analysis', this)">Análisis</button>
     </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4F9w4HYhOAKaQcLsl2RFKwNvhi3F52x7a3LT9mxaLfhLIOf-1q9DTi-aG8RIvOkVRQ/exec'; 
+    const scriptURL = 'TU_URL_DEL_SCRIPT_AQUÍ'; 
     let expenses = [], charts = {};
-    const monthFilter = document.getElementById('month-filter');
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('date').valueAsDate = new Date();
-        fetch(scriptURL).then(res => res.json()).then(data => {
-            expenses = data;
-            const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
-            months.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.text = m; monthFilter.appendChild(opt); });
-            const currentMonth = new Date().toISOString().substring(0, 7);
-            if (months.includes(currentMonth)) monthFilter.value = currentMonth;
-            updateUI();
-        });
-    });
-
-    monthFilter.addEventListener('change', updateUI);
-
+    function showPage(id, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active'); btn.classList.add('active');
+    }
+    
     document.getElementById('tx-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        const tx = { id: Date.now(), date: document.getElementById('date').value, desc: document.getElementById('desc').value, category: document.getElementById('category').value, payer: document.getElementById('payer').value, method: document.getElementById('account').value, amount: document.getElementById('amount').value };
-        expenses.push(tx); updateUI();
+        const tx = { date: document.getElementById('date').value, desc: document.getElementById('desc').value, category: document.getElementById('category').value, account: document.getElementById('account').value, amount: document.getElementById('amount').value, payer: document.getElementById('payer').value };
         fetch(scriptURL, { method: 'POST', body: JSON.stringify(tx) });
-        this.reset(); document.getElementById('date').valueAsDate = new Date();
+        this.reset(); alert("Gasto guardado");
     });
-
-    function updateUI() {
-        const list = document.getElementById('tx-list'), selected = monthFilter.value;
-        list.innerHTML = '';
-        let total = 0, byCat = {}, byPayer = {}, byMet = {};
-        const filtered = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
-        
-        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
-            total += parseFloat(tx.amount);
-            byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount);
-            byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount);
-            byMet[tx.method] = (byMet[tx.method] || 0) + parseFloat(tx.amount);
-            const shortDate = tx.date.split('T')[0];
-            list.innerHTML += `<div class="transaction-item"><div><b>${tx.desc}</b><br><small style="color:var(--text-muted)">${shortDate} • ${tx.category} • ${tx.payer}</small></div><div style="color:var(--expense); font-weight:700">-$${parseFloat(tx.amount).toLocaleString()}</div></div>`;
-        });
-        
-        document.getElementById('balance-display').innerText = `$${total.toLocaleString()}`;
-        if(filtered.length > 0) {
-            document.getElementById('analysis-section').style.display = 'block';
-            createChart('chart-category', 'Gastos por Categoría', byCat);
-            createChart('chart-payer', 'Gastos por Persona', byPayer);
-            createChart('chart-method', 'Gastos por Cuenta', byMet);
-        } else {
-            document.getElementById('analysis-section').style.display = 'none';
-        }
-    }
-
-    function createChart(id, label, data) {
-        if(charts[id]) charts[id].destroy();
-        charts[id] = new Chart(document.getElementById(id), {
-            type: 'pie',
-            data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: ['#89c4f4', '#ff9e9e', '#a3e4d7', '#f7dc6f', '#d2b4de', '#f5b7b1', '#aed6f1'] }] },
-            options: { plugins: { title: { display: true, text: label } } }
-        });
-    }
 </script>
 </body>
 </html>
