@@ -100,7 +100,8 @@
             byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount);
             byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount);
             byMet[tx.method] = (byMet[tx.method] || 0) + parseFloat(tx.amount);
-            list.innerHTML += `<div class="transaction-item"><div><b>${tx.desc}</b><br><small style="color:var(--text-muted)">${tx.category} • ${tx.payer}</small></div><div style="color:var(--expense); font-weight:700">-$${parseFloat(tx.amount).toLocaleString()}</div></div>`;
+            // Acá agregué el ${tx.date} al HTML generado:
+            list.innerHTML += `<div class="transaction-item"><div><b>${tx.desc}</b><br><small style="color:var(--text-muted)">${tx.date} • ${tx.category} • ${tx.payer}</small></div><div style="color:var(--expense); font-weight:700">-$${parseFloat(tx.amount).toLocaleString()}</div></div>`;
         });
         
         document.getElementById('balance-display').innerText = `$${total.toLocaleString()}`;
