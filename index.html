@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KodaCoin | Mis Gastos</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="theme-color" content="#89c4f4">
     <style>
         :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
@@ -13,15 +14,11 @@
         .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: none; }
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
-        
-        /* Ajuste de font-size a 16px para evitar el zoom en iOS */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 16px; }
-        
         button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; }
-        button.btn-submit:active { transform: scale(0.98); }
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
-        .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
         h1, h2, h3 { font-weight: 700; }
+        canvas { margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -63,7 +60,10 @@
     </div>
 
     <div class="card" id="analysis-section" style="display:none">
-        <div id="sum-category"></div><div id="sum-payer"></div><div id="sum-method"></div>
+        <h2>Análisis</h2>
+        <canvas id="chart-category"></canvas>
+        <canvas id="chart-payer"></canvas>
+        <canvas id="chart-method"></canvas>
     </div>
 
     <div class="card">
@@ -74,7 +74,7 @@
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4F9w4HYhOAKaQcLsl2RFKwNvhi3F52x7a3LT9mxaLfhLIOf-1q9DTi-aG8RIvOkVRQ/exec'; 
-    let expenses = [];
+    let expenses = [], charts = {};
     const monthFilter = document.getElementById('month-filter');
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -83,12 +83,8 @@
             expenses = data;
             const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
             months.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.text = m; monthFilter.appendChild(opt); });
-            
             const currentMonth = new Date().toISOString().substring(0, 7);
-            if (months.includes(currentMonth)) {
-                monthFilter.value = currentMonth;
-            }
-            
+            if (months.includes(currentMonth)) monthFilter.value = currentMonth;
             updateUI();
         });
     });
@@ -114,7 +110,6 @@
             byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount);
             byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount);
             byMet[tx.method] = (byMet[tx.method] || 0) + parseFloat(tx.amount);
-            
             const shortDate = tx.date.split('T')[0];
             list.innerHTML += `<div class="transaction-item"><div><b>${tx.desc}</b><br><small style="color:var(--text-muted)">${shortDate} • ${tx.category} • ${tx.payer}</small></div><div style="color:var(--expense); font-weight:700">-$${parseFloat(tx.amount).toLocaleString()}</div></div>`;
         });
@@ -122,15 +117,21 @@
         document.getElementById('balance-display').innerText = `$${total.toLocaleString()}`;
         if(filtered.length > 0) {
             document.getElementById('analysis-section').style.display = 'block';
-            renderSum('sum-category', 'Categoría', byCat); renderSum('sum-payer', 'Quién pagó', byPayer); renderSum('sum-method', 'Cuenta', byMet);
+            createChart('chart-category', 'Gastos por Categoría', byCat);
+            createChart('chart-payer', 'Gastos por Persona', byPayer);
+            createChart('chart-method', 'Gastos por Cuenta', byMet);
         } else {
             document.getElementById('analysis-section').style.display = 'none';
         }
     }
 
-    function renderSum(id, title, data) {
-        const el = document.getElementById(id);
-        el.innerHTML = `<h3 style="font-size:14px; margin:10px 0">${title}</h3>` + Object.keys(data).map(k => `<div class="summary-row"><span>${k}</span><b>$${data[k].toLocaleString()}</b></div>`).join('');
+    function createChart(id, label, data) {
+        if(charts[id]) charts[id].destroy();
+        charts[id] = new Chart(document.getElementById(id), {
+            type: 'pie',
+            data: { labels: Object.keys(data), datasets: [{ data: Object.values(data), backgroundColor: ['#89c4f4', '#ff9e9e', '#a3e4d7', '#f7dc6f', '#d2b4de', '#f5b7b1', '#aed6f1'] }] },
+            options: { plugins: { title: { display: true, text: label } } }
+        });
     }
 </script>
 </body>
