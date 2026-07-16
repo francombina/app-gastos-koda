@@ -16,69 +16,166 @@
             --border-radius: 24px;
         }
 
-        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            color: var(--text-main);
+        }
+
         .app-container { width: 100%; max-width: 480px; }
+        
         header { margin-bottom: 25px; text-align: center; }
         h1 { margin: 0; font-size: 28px; color: var(--primary-dark); }
-        .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 24px; box-shadow: 0 10px 20px rgba(137, 196, 244, 0.15); margin-bottom: 20px; }
+        p.subtitle { margin: 5px 0 0; color: var(--text-muted); font-size: 14px; }
         
-        /* Meses (Encabezados) */
-        .month-header { font-size: 18px; font-weight: 700; color: var(--primary-dark); margin: 25px 0 10px 5px; border-left: 4px solid var(--primary); padding-left: 10px; }
+        .card { 
+            background: var(--card-bg); 
+            border-radius: var(--border-radius); 
+            padding: 24px; 
+            box-shadow: 0 10px 20px rgba(137, 196, 244, 0.15); 
+            margin-bottom: 20px; 
+        }
+        
+        .card h2 { margin: 0 0 15px 0; font-size: 18px; color: var(--primary-dark); }
 
         .summary-card { text-align: center; border: 2px solid var(--primary); }
-        .balance-amount { font-size: 40px; font-weight: 800; color: var(--primary-dark); }
+        .balance-label { color: var(--text-muted); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-amount { font-size: 40px; font-weight: 800; margin: 10px 0 0 0; color: var(--primary-dark); }
+
+        .summary-block h3 { color: var(--text-muted); font-size: 12px; margin-bottom: 10px; border-bottom: 1px solid #f0f4f8; padding-bottom: 5px; }
+        .summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+        .summary-row .label { font-weight: 500; }
+        .summary-row .amount { color: var(--primary-dark); font-weight: 700; }
 
         .input-group { margin-bottom: 15px; }
-        input, select { width: 100%; padding: 12px; border: 2px solid #e1ecf4; border-radius: 16px; box-sizing: border-box; }
-        button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 16px; font-weight: 700; cursor: pointer; }
+        .input-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+        input, select { 
+            width: 100%; padding: 12px; border: 2px solid #e1ecf4; border-radius: 16px; 
+            box-sizing: border-box; font-size: 15px; outline: none; transition: border-color 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--primary); }
+        
+        button.btn-submit { 
+            width: 100%; padding: 14px; background-color: var(--primary); color: white; 
+            border: none; border-radius: 16px; font-weight: 700; font-size: 16px; cursor: pointer; 
+            margin-top: 10px; transition: background 0.3s;
+        }
+        button.btn-submit:hover { background-color: var(--primary-dark); }
 
-        .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 16px; border-radius: 18px; margin-bottom: 8px; }
-        .tx-amount { font-weight: 700; color: var(--expense); }
+        .transaction-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #fafbfc; padding: 16px; border-radius: 18px; margin-bottom: 12px;
+        }
+        .tx-info h3 { margin: 0 0 4px 0; font-size: 16px; }
         .tx-details { font-size: 12px; color: var(--text-muted); }
+        .tx-amount { font-weight: 700; font-size: 16px; color: var(--expense); }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <header><h1>Mis Gastos 👋</h1></header>
+    <header>
+        <h1>Mis Gastos 👋</h1>
+        <p class="subtitle">Organizador personal</p>
+    </header>
 
-    <div class="card" style="padding: 10px 24px;">
+    <div class="card" style="padding: 10px 24px; margin-bottom: 20px;">
         <select id="month-filter" style="border: none; font-weight: 700; color: var(--primary-dark); cursor: pointer; background: transparent; width: 100%;">
             <option value="all">Ver todo el historial</option>
         </select>
     </div>
 
     <div class="card summary-card">
-        <div style="color:var(--text-muted); font-size: 14px;">Total del periodo</div>
+        <div class="balance-label">Total del periodo</div>
         <div class="balance-amount" id="balance-display">$0.00</div>
     </div>
 
     <div class="card">
         <h2>Nuevo Gasto</h2>
         <form id="tx-form">
-            <input type="text" id="desc" placeholder="Concepto" required style="margin-bottom:10px;">
-            <select id="category" required style="margin-bottom:10px;">
-                <option value="Vivienda">Vivienda</option>
-                <option value="Supermercado">Supermercado</option>
-                <option value="Ocio">Ocio</option>
-            </select>
-            <input type="number" id="amount" placeholder="Monto" required style="margin-bottom:10px;">
-            <input type="date" id="date" required style="margin-bottom:10px;">
+            <div class="input-group">
+                <label>Fecha</label>
+                <input type="date" id="date" required>
+            </div>
+            <div class="input-group">
+                <label>Concepto</label>
+                <input type="text" id="desc" placeholder="Ej. Supermercado" required>
+            </div>
+            <div class="input-group">
+                <label>Categoría</label>
+                <select id="category" required>
+                    <option value="Verdulería/Carniceria">Verdulería/Carniceria</option>
+                    <option value="Almuerzo oficina">Almuerzo oficina</option>
+                    <option value="Casa">Casa</option>
+                    <option value="Auto">Auto</option>
+                    <option value="Super">Super</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Farmacia">Farmacia</option>
+                    <option value="Gastos varios">Gastos varios</option>
+                    <option value="Comer afuera">Comer afuera</option>
+                    <option value="Servicios">Servicios</option>
+                    <option value="Recreacion">Recreacion</option>
+                    <option value="Regalos">Regalos</option>
+                    <option value="Tarjeta de Credito">Tarjeta de Crédito</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Vacaciones">Vacaciones</option>
+                    <option value="Suscripciones">Suscripciones</option>
+                    <option value="Gimnasio/Salud">Gimnasio/Salud</option>
+                    <option value="Panaderia">Panadería</option>
+                    <option value="Koda">Koda</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Cuenta</label>
+                <select id="account" required>
+                    <option value="Personal Pay">Personal Pay</option>
+                    <option value="Tarjeta de Credito">Tarjeta de Crédito</option>
+                    <option value="BBVA CA">BBVA CA</option>
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="MercadoPago">MercadoPago</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Monto ($)</label>
+                <input type="number" id="amount" placeholder="0.00" step="0.01" required>
+            </div>
+            <div class="input-group">
+                <label>Quién pagó</label>
+                <select id="payer" required>
+                    <option value="Fran">Fran</option>
+                    <option value="Agus">Agus</option>
+                    <option value="Compartido">Compartido</option>
+                </select>
+            </div>
             <button type="submit" class="btn-submit">Guardar Gasto</button>
         </form>
     </div>
 
+    <div class="card" id="analysis-section" style="display: none;">
+        <h2>Resumen</h2>
+        <div class="summary-block" id="sum-category"></div>
+        <div class="summary-block" id="sum-payer"></div>
+        <div class="summary-block" id="sum-method"></div>
+    </div>
+
     <div class="card">
         <h2>Historial</h2>
-        <div id="tx-list">Cargando...</div>
+        <div id="tx-list">Cargando datos desde la nube...</div>
     </div>
 </div>
 
 <script>
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4F9w4HYhOAKaQcLsl2RFKwNvhi3F52x7a3LT9mxaLfhLIOf-1q9DTi-aG8RIvOkVRQ/exec'; 
+    // --- RECORDÁ PONER TU URL DE APPS SCRIPT ACÁ ---
+    const scriptURL = 'TU_URL_DE_APPS_SCRIPT_ACA'; 
+    
     let expenses = [];
     const monthFilter = document.getElementById('month-filter');
 
+    // --- CARGA INICIAL ---
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('date').valueAsDate = new Date();
         fetch(scriptURL)
@@ -87,11 +184,14 @@
                 expenses = data;
                 populateMonthFilter();
                 updateUI();
+            })
+            .catch(err => {
+                document.getElementById('tx-list').innerHTML = "Error al conectar con la planilla.";
             });
     });
 
+    // --- FILTRADO POR MES ---
     function populateMonthFilter() {
-        // Aseguramos que la fecha tenga formato correcto antes de extraer
         const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
         months.forEach(m => {
             const option = document.createElement('option');
@@ -103,44 +203,7 @@
 
     monthFilter.addEventListener('change', updateUI);
 
-    function updateUI() {
-        const list = document.getElementById('tx-list');
-        list.innerHTML = '';
-        let total = 0;
-        const selectedMonth = monthFilter.value;
-        
-        // 1. Filtramos
-        const filtered = expenses.filter(tx => selectedMonth === 'all' || tx.date.substring(0, 7) === selectedMonth);
-        filtered.forEach(tx => total += parseFloat(tx.amount));
-        document.getElementById('balance-display').innerText = `$${total.toLocaleString()}`;
-
-        // 2. Agrupamos por mes para la vista
-        // Creamos un objeto donde las llaves son los meses (ej: 2026-07)
-        const groups = filtered.reduce((acc, tx) => {
-            const month = tx.date.substring(0, 7);
-            if (!acc[month]) acc[month] = [];
-            acc[month].push(tx);
-            return acc;
-        }, {});
-
-        // 3. Renderizamos
-        Object.keys(groups).sort().reverse().forEach(month => {
-            // Solo ponemos el encabezado si estamos en "Ver todo"
-            if (selectedMonth === 'all') {
-                list.innerHTML += `<div class="month-header">${month}</div>`;
-            }
-            
-            groups[month].sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
-                list.innerHTML += `
-                    <div class="transaction-item">
-                        <div><b>${tx.desc}</b><br><small>${tx.category} • ${tx.payer}</small></div>
-                        <div class="tx-amount">-$${parseFloat(tx.amount).toLocaleString()}</div>
-                    </div>`;
-            });
-        });
-    }
-
-    // (Tu función de submit se mantiene igual)
+    // --- ENVÍO DE DATOS ---
     document.getElementById('tx-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const expense = {
@@ -148,16 +211,65 @@
             date: document.getElementById('date').value,
             desc: document.getElementById('desc').value,
             category: document.getElementById('category').value,
-            payer: 'Yo',
-            method: 'Efectivo',
+            payer: document.getElementById('payer').value,
+            method: document.getElementById('account').value, // Sigue mapeando a 'method' para la base de datos
             amount: parseFloat(document.getElementById('amount').value)
         };
+
         expenses.push(expense);
         updateUI();
+        
         fetch(scriptURL, { method: 'POST', body: JSON.stringify(expense) }).catch(err => console.log(err));
+        
         this.reset();
         document.getElementById('date').valueAsDate = new Date();
     });
+
+    // --- LÓGICA DE UI ---
+    function updateUI() {
+        const list = document.getElementById('tx-list');
+        list.innerHTML = '';
+        let total = 0, byCat = {}, byPayer = {}, byMet = {};
+        
+        const selectedMonth = monthFilter.value;
+        const filteredExpenses = expenses.filter(tx => 
+            selectedMonth === 'all' || tx.date.substring(0, 7) === selectedMonth
+        );
+
+        filteredExpenses.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
+            total += parseFloat(tx.amount);
+            byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount);
+            byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount);
+            byMet[tx.method] = (byMet[tx.method] || 0) + parseFloat(tx.amount); // Agrupa por Cuenta internamente
+
+            list.innerHTML += `
+                <div class="transaction-item">
+                    <div class="tx-info">
+                        <h3>${tx.desc}</h3>
+                        <div class="tx-details">${tx.date} • ${tx.category} • ${tx.method} • ${tx.payer}</div>
+                    </div>
+                    <div class="tx-amount">-$${parseFloat(tx.amount).toLocaleString()}</div>
+                </div>`;
+        });
+
+        document.getElementById('balance-display').innerText = `$${total.toLocaleString()}`;
+        if (filteredExpenses.length > 0) {
+            document.getElementById('analysis-section').style.display = 'block';
+            renderSummary('sum-category', 'Por Categoría', byCat);
+            renderSummary('sum-payer', 'Quién pagó', byPayer);
+            renderSummary('sum-method', 'Por Cuenta', byMet); // Título actualizado para la vista
+        } else {
+            document.getElementById('analysis-section').style.display = 'none';
+        }
+    }
+
+    function renderSummary(elementId, title, data) {
+        const el = document.getElementById(elementId);
+        const keys = Object.keys(data).sort((a, b) => data[b] - data[a]);
+        let html = `<h3>${title}</h3>`;
+        keys.forEach(k => html += `<div class="summary-row"><span class="label">${k}</span><span class="amount">$${data[k].toLocaleString()}</span></div>`);
+        el.innerHTML = html;
+    }
 </script>
 
 </body>
