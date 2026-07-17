@@ -2,13 +2,27 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    
+    <!-- Favicon para la pestaña del navegador -->
+    <link rel="icon" type="image/png" href="kodacoin.png">
+
+    <!-- Icono oficial para cuando lo agregás al inicio en el iPhone -->
+    <link rel="apple-touch-icon" href="kodacoin.png">
+
+    <!-- Configuración para que se abra a pantalla completa como una App nativa -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="KodaCoin">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KodaCoin | Mis Gastos</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="theme-color" content="#89c4f4">
+    
     <style>
         :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
         
+        /* Estilo de letras clásico y limpio del sistema */
         body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
         
         .app-container { width: 100%; max-width: 480px; }
@@ -16,7 +30,7 @@
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
-        /* Ajuste de font-size a 16px para evitar el zoom en iOS */
+        /* Ajuste de font-size a 16px para evitar el zoom automático en iOS */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-weight: 600; font-size: 16px; }
         
         button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
@@ -31,9 +45,10 @@
 </head>
 <body>
 <div class="app-container">
-    <!-- Contenedor del Logo -->
+    
+    <!-- Contenedor del kodacoin de la App -->
     <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-        <img src="kodacoin.png" alt="Logo" style="width: 70px; height: auto; border-radius: 50%;">
+        <img src="kodacoin.png" alt="kodacoin KodaCoin" style="width: 70px; height: auto; border-radius: 50%;">
     </div>
     
     <h1 style="text-align:center; color: var(--primary-dark); margin-top: 5px;">KodaCoin 🐾</h1>
@@ -90,7 +105,7 @@
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4F9w4HYhOAKaQcLsl2RFKwNvhi3F52x7a3LT9mxaLfhLIOf-1q9DTi-aG8RIvOkVRQ/exec'; 
     let expenses = [], charts = {};
-    let editingId = null; // Variable para saber si estamos editando
+    let editingId = null; 
     const monthFilter = document.getElementById('month-filter');
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -127,22 +142,20 @@
         const payer = document.getElementById('payer').value;
 
         if (editingId) {
-            // MODO EDICIÓN: Actualiza localmente
+            // MODO EDICIÓN
             expenses = expenses.map(tx => tx.id.toString() === editingId.toString() ? { id: editingId, date, desc, category, account, amount, payer } : tx);
             updateUI();
             
-            // Envía al backend con la orden 'edit'
             fetch(scriptURL, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: 'edit', id: editingId, date, desc, category, account, amount, payer }) 
             });
             
-            // Resetear estado del formulario
             editingId = null;
             document.getElementById('form-title').innerText = "Nuevo Gasto";
             document.getElementById('submit-button').innerText = "Guardar Gasto";
         } else {
-            // MODO GASTO NUEVO
+            // MODO NUEVO GASTO
             const localId = Date.now().toString();
             const tx = { id: localId, date, desc, category, account, amount, payer };
             
@@ -156,12 +169,10 @@
     });
 
     function editExpense(id) {
-        // Buscar el gasto elegido
         const tx = expenses.find(e => e.id.toString() === id.toString());
         if (tx) {
             editingId = id;
             
-            // Rellenar el formulario con los datos existentes
             document.getElementById('date').value = tx.date.split('T')[0];
             document.getElementById('desc').value = tx.desc;
             document.getElementById('category').value = tx.category;
@@ -169,11 +180,9 @@
             document.getElementById('amount').value = tx.amount;
             document.getElementById('payer').value = tx.payer;
             
-            // Cambiar textos visuales del formulario
             document.getElementById('form-title').innerText = "Editar Gasto ✏️";
             document.getElementById('submit-button').innerText = "Actualizar Gasto";
             
-            // Scroll suave hacia arriba para editar cómodo en el celu
             document.getElementById('form-card').scrollIntoView({ behavior: 'smooth' });
         }
     }
@@ -188,7 +197,6 @@
                 body: JSON.stringify({ action: 'delete', id: id }) 
             });
             
-            // Si justo estábamos editando ese gasto y lo borramos, reseteamos el form
             if(editingId && editingId.toString() === id.toString()) {
                 editingId = null;
                 document.getElementById('tx-form').reset();
