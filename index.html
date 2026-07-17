@@ -4,21 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KodaCoin | Mis Gastos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght=400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="theme-color" content="#89c4f4">
     <style>
         :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
-        body { font-family: 'Quicksand', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
+        
+        /* Estilo de letras clásico y limpio del sistema */
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
+        
         .app-container { width: 100%; max-width: 480px; }
         .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: none; }
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
         /* Ajuste de font-size a 16px para evitar el zoom en iOS */
-        input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 16px; }
+        input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-weight: 600; font-size: 16px; }
         
-        button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
         button.btn-submit:active { transform: scale(0.98); }
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
         h1, h2, h3 { font-weight: 700; margin-top: 0; }
@@ -112,7 +114,6 @@
     document.getElementById('tx-form').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Creamos ID local temporal para poder borrarlo de inmediato si nos equivocamos
         const localId = Date.now().toString();
         
         const tx = { 
@@ -136,11 +137,9 @@
 
     function deleteExpense(id) {
         if (confirm('¿Seguro que querés borrar este gasto?')) {
-            // Lo sacamos de la lista local inmediatamente para que la UI responda rápido
             expenses = expenses.filter(tx => tx.id.toString() !== id.toString());
             updateUI();
             
-            // Le pegamos al backend con la acción de borrar
             fetch(scriptURL, { 
                 method: 'POST', 
                 body: JSON.stringify({ action: 'delete', id: id }) 
@@ -216,7 +215,7 @@
             },
             options: { 
                 plugins: { 
-                    title: { display: true, text: label, font: { family: 'Quicksand', size: 16 } } 
+                    title: { display: true, text: label, font: { family: 'system-ui', size: 16 } } 
                 } 
             }
         });
