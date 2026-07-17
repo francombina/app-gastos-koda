@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KodaCoin | Mis Gastos</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght=400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="theme-color" content="#89c4f4">
     <style>
@@ -23,6 +23,9 @@
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
         h1, h2, h3 { font-weight: 700; margin-top: 0; }
         canvas { margin-top: 15px; }
+        
+        .btn-delete { background: none; border: none; color: var(--expense); font-size: 16px; cursor: pointer; padding: 5px 0 5px 10px; transition: 0.2s; }
+        .btn-delete:active { transform: scale(0.85); }
     </style>
 </head>
 <body>
@@ -109,8 +112,11 @@
     document.getElementById('tx-form').addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Objeto con el nuevo orden para Google Sheets
+        // Creamos ID local temporal para poder borrarlo de inmediato si nos equivocamos
+        const localId = Date.now().toString();
+        
         const tx = { 
+            id: localId,
             date: document.getElementById('date').value, 
             desc: document.getElementById('desc').value, 
             category: document.getElementById('category').value, 
@@ -127,6 +133,20 @@
         this.reset(); 
         document.getElementById('date').valueAsDate = new Date();
     });
+
+    function deleteExpense(id) {
+        if (confirm('¿Seguro que querés borrar este gasto?')) {
+            // Lo sacamos de la lista local inmediatamente para que la UI responda rápido
+            expenses = expenses.filter(tx => tx.id.toString() !== id.toString());
+            updateUI();
+            
+            // Le pegamos al backend con la acción de borrar
+            fetch(scriptURL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'delete', id: id }) 
+            });
+        }
+    }
 
     function updateUI() {
         const list = document.getElementById('tx-list'), selected = monthFilter.value;
@@ -155,8 +175,11 @@
                         <b>${tx.desc}</b><br>
                         <small style="color:var(--text-muted)">${shortDate} • ${tx.category} • ${tx.payer} • ${tx.account}</small>
                     </div>
-                    <div style="color:var(--expense); font-weight:700">
-                        -$${parseFloat(tx.amount).toLocaleString()}
+                    <div style="display: flex; align-items: center;">
+                        <div style="color:var(--expense); font-weight:700">
+                            -$${parseFloat(tx.amount).toLocaleString()}
+                        </div>
+                        <button class="btn-delete" onclick="deleteExpense('${tx.id}')">❌</button>
                     </div>
                 </div>`;
         });
@@ -173,28 +196,11 @@
     function createChart(id, label, data) {
         if(charts[id]) charts[id].destroy();
         
-        // Paleta ampliada de 20 colores para que no se repitan
         const colores = [
-            '#89c4f4', // Azul Koda
-            '#ff9e9e', // Rojo suave
-            '#a3e4d7', // Menta
-            '#f7dc6f', // Amarillo
-            '#d2b4de', // Lila
-            '#f1948a', // Coral
-            '#73c6b6', // Verde azulado
-            '#f8c471', // Durazno
-            '#bb8fce', // Morado
-            '#58d68d', // Verde
-            '#85c1e9', // Celeste
-            '#f0b27a', // Naranja suave
-            '#aeb6bf', // Gris azulado
-            '#f5b041', // Naranja fuerte
-            '#48c9b0', // Turquesa
-            '#af7ac5', // Violeta
-            '#5dade2', // Azul oscuro
-            '#ec7063', // Rojo terracota
-            '#f4d03f', // Mostaza
-            '#a9dfbf'  // Verde agua
+            '#89c4f4', '#ff9e9e', '#a3e4d7', '#f7dc6f', '#d2b4de', 
+            '#f1948a', '#73c6b6', '#f8c471', '#bb8fce', '#58d68d', 
+            '#85c1e9', '#f0b27a', '#aeb6bf', '#f5b041', '#48c9b0', 
+            '#af7ac5', '#5dade2', '#ec7063', '#f4d03f', '#a9dfbf'
         ];
 
         charts[id] = new Chart(document.getElementById(id), {
