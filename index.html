@@ -172,13 +172,40 @@
 
     function createChart(id, label, data) {
         if(charts[id]) charts[id].destroy();
+        
+        // Paleta ampliada de 20 colores para que no se repitan
+        const colores = [
+            '#89c4f4', // Azul Koda
+            '#ff9e9e', // Rojo suave
+            '#a3e4d7', // Menta
+            '#f7dc6f', // Amarillo
+            '#d2b4de', // Lila
+            '#f1948a', // Coral
+            '#73c6b6', // Verde azulado
+            '#f8c471', // Durazno
+            '#bb8fce', // Morado
+            '#58d68d', // Verde
+            '#85c1e9', // Celeste
+            '#f0b27a', // Naranja suave
+            '#aeb6bf', // Gris azulado
+            '#f5b041', // Naranja fuerte
+            '#48c9b0', // Turquesa
+            '#af7ac5', // Violeta
+            '#5dade2', // Azul oscuro
+            '#ec7063', // Rojo terracota
+            '#f4d03f', // Mostaza
+            '#a9dfbf'  // Verde agua
+        ];
+
         charts[id] = new Chart(document.getElementById(id), {
             type: 'pie',
             data: { 
                 labels: Object.keys(data), 
                 datasets: [{ 
                     data: Object.values(data), 
-                    backgroundColor: ['#89c4f4', '#ff9e9e', '#a3e4d7', '#f7dc6f', '#d2b4de', '#f5b7b1', '#aed6f1', '#f9e79f', '#abebc6'] 
+                    backgroundColor: colores,
+                    borderWidth: 2, 
+                    borderColor: '#ffffff'
                 }] 
             },
             options: { 
