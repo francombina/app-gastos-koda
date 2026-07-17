@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     
     <!-- Favicon para la pestaña del navegador -->
-    <link rel="icon" type="image/png" href="kodacoin.png">
+    <link rel="icon" type="image/png" href="logo.png">
 
     <!-- Icono oficial para cuando lo agregás al inicio en el iPhone -->
-    <link rel="apple-touch-icon" href="kodacoin.png">
+    <link rel="apple-touch-icon" href="logo.png">
 
     <!-- Configuración para que se abra a pantalla completa como una App nativa -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -41,20 +41,26 @@
         
         .btn-action { background: none; border: none; font-size: 16px; cursor: pointer; padding: 5px 0 5px 10px; transition: 0.2s; }
         .btn-action:active { transform: scale(0.85); }
+
+        /* Botón de actualizar al lado del filtro */
+        .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
+        .btn-refresh:active { transform: scale(0.90); }
     </style>
 </head>
 <body>
 <div class="app-container">
     
-    <!-- Contenedor del kodacoin de la App -->
+    <!-- Contenedor del Logo de la App -->
     <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
-        <img src="kodacoin.png" alt="kodacoin KodaCoin" style="width: 70px; height: auto; border-radius: 50%;">
+        <img src="logo.png" alt="Logo KodaCoin" style="width: 70px; height: auto; border-radius: 50%;">
     </div>
     
     <h1 style="text-align:center; color: var(--primary-dark); margin-top: 5px;">KodaCoin 🐾</h1>
     
-    <div class="card">
-        <select id="month-filter"><option value="all">Ver todo el historial</option></select>
+    <!-- Filtro y Botón Actualizar juntos -->
+    <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
+        <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
+        <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
     </div>
     
     <div class="card summary-card">
@@ -110,8 +116,25 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('date').valueAsDate = new Date();
+        loadData(); // Carga inicial
+    });
+
+    // Evento para el botón de actualizar manual
+    document.getElementById('btn-refresh').addEventListener('click', loadData);
+    monthFilter.addEventListener('change', updateUI);
+
+    function loadData() {
+        const list = document.getElementById('tx-list');
+        list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Cargando datos...</p>';
+        
         fetch(scriptURL).then(res => res.json()).then(data => {
             expenses = data;
+            
+            // Guardamos el mes que el usuario tenía seleccionado para no perdérselo al actualizar
+            const currentSelected = monthFilter.value;
+            
+            // Limpiamos y reconstruimos las opciones del selector de meses
+            monthFilter.innerHTML = '<option value="all">Ver todo el historial</option>';
             const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
             months.forEach(m => { 
                 const opt = document.createElement('option'); 
@@ -120,16 +143,22 @@
                 monthFilter.appendChild(opt); 
             });
             
-            const currentMonth = new Date().toISOString().substring(0, 7);
-            if (months.includes(currentMonth)) {
-                monthFilter.value = currentMonth;
+            // Intentamos restaurar la selección de mes que estaba puesta, sino ponemos el mes actual
+            if (months.includes(currentSelected)) {
+                monthFilter.value = currentSelected;
+            } else {
+                const currentMonth = new Date().toISOString().substring(0, 7);
+                if (months.includes(currentMonth)) {
+                    monthFilter.value = currentMonth;
+                }
             }
             
             updateUI();
+        }).catch(err => {
+            list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con Google Sheets.</p>';
+            console.error(err);
         });
-    });
-
-    monthFilter.addEventListener('change', updateUI);
+    }
 
     document.getElementById('tx-form').addEventListener('submit', function(e) {
         e.preventDefault();
