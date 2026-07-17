@@ -65,7 +65,7 @@
     
     <div class="card summary-card">
         <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
-        <div class="balance-amount" id="balance-display">$0.00</div>
+        <div class="balance-amount" id="balance-display">$0</div>
     </div>
 
     <div class="card" id="form-card">
@@ -265,7 +265,7 @@
                     </div>
                     <div style="display: flex; align-items: center;">
                         <div style="color:var(--expense); font-weight:700; white-space: nowrap;">
-                            -$${parseFloat(tx.amount).toLocaleString()}
+                            -$${Math.round(parseFloat(tx.amount)).toLocaleString()}
                         </div>
                         <button class="btn-action" style="color: var(--primary-dark);" onclick="editExpense('${tx.id}')">✏️</button>
                         <button class="btn-action" style="color: var(--expense);" onclick="deleteExpense('${tx.id}')">❌</button>
@@ -273,7 +273,7 @@
                 </div>`;
         });
         
-        document.getElementById('balance-display').innerText = `$${total.toLocaleString()}`;
+        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
         
         if(filtered.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
