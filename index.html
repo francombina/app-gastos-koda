@@ -84,7 +84,7 @@
             </select>
             <select id="account" required>
                 <option value="" disabled selected>Seleccionar cuenta</option>
-                <option>Personal Pay</option><option>Tarjeta de Credito</option><option>Debito</option><option>Efectivo</option><option>MercadoPago</option>
+                <option>Personal Pay</option><option>Tarjeta de Credito</option><option>BBVA CA</option><option>Efectivo</option><option>MercadoPago</option>
             </select>
             <input type="number" id="amount" placeholder="Monto" required>
             <select id="payer" required>
@@ -197,21 +197,19 @@
         document.getElementById('date').valueAsDate = new Date();
     });
 
+    // ... (Mantengo funciones de edición y borrado intactas)
     function editExpense(id) {
         const tx = expenses.find(e => e.id.toString() === id.toString());
         if (tx) {
             editingId = id;
-            
             document.getElementById('date').value = tx.date.split('T')[0];
             document.getElementById('desc').value = tx.desc;
             document.getElementById('category').value = tx.category;
             document.getElementById('account').value = tx.account;
             document.getElementById('amount').value = tx.amount;
             document.getElementById('payer').value = tx.payer;
-            
             document.getElementById('form-title').innerText = "Editar Gasto ✏️";
             document.getElementById('submit-button').innerText = "Actualizar Gasto";
-            
             document.getElementById('form-card').scrollIntoView({ behavior: 'smooth' });
         }
     }
@@ -220,12 +218,7 @@
         if (confirm('¿Seguro que querés borrar este gasto?')) {
             expenses = expenses.filter(tx => tx.id.toString() !== id.toString());
             updateUI();
-            
-            fetch(scriptURL, { 
-                method: 'POST', 
-                body: JSON.stringify({ action: 'delete', id: id }) 
-            });
-            
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
             if(editingId && editingId.toString() === id.toString()) {
                 editingId = null;
                 document.getElementById('tx-form').reset();
@@ -292,12 +285,15 @@
             '#af7ac5', '#5dade2', '#ec7063', '#f4d03f', '#a9dfbf'
         ];
 
+        // Redondeamos los valores antes de pasárselos al gráfico
+        const roundedValues = Object.values(data).map(val => Math.round(val));
+
         charts[id] = new Chart(document.getElementById(id), {
             type: 'pie',
             data: { 
                 labels: Object.keys(data), 
                 datasets: [{ 
-                    data: Object.values(data), 
+                    data: roundedValues, 
                     backgroundColor: colores,
                     borderWidth: 2, 
                     borderColor: '#ffffff'
@@ -305,7 +301,15 @@
             },
             options: { 
                 plugins: { 
-                    title: { display: true, text: label, font: { family: 'system-ui', size: 16 } } 
+                    title: { display: true, text: label, font: { family: 'system-ui', size: 16 } },
+                    // Formateamos el cartel flotante para agregar el signo $ y separador de miles
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: $${context.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
                 } 
             }
         });
