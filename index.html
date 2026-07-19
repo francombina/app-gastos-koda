@@ -119,7 +119,6 @@
         loadData(); // Carga inicial
     });
 
-    // Evento para el botón de actualizar manual
     document.getElementById('btn-refresh').addEventListener('click', loadData);
     monthFilter.addEventListener('change', updateUI);
 
@@ -129,11 +128,8 @@
         
         fetch(scriptURL).then(res => res.json()).then(data => {
             expenses = data;
-            
-            // Guardamos el mes que el usuario tenía seleccionado para no perdérselo al actualizar
             const currentSelected = monthFilter.value;
             
-            // Limpiamos y reconstruimos las opciones del selector de meses
             monthFilter.innerHTML = '<option value="all">Ver todo el historial</option>';
             const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
             months.forEach(m => { 
@@ -143,7 +139,6 @@
                 monthFilter.appendChild(opt); 
             });
             
-            // Intentamos restaurar la selección de mes que estaba puesta, sino ponemos el mes actual
             if (months.includes(currentSelected)) {
                 monthFilter.value = currentSelected;
             } else {
@@ -171,7 +166,6 @@
         const payer = document.getElementById('payer').value;
 
         if (editingId) {
-            // MODO EDICIÓN
             expenses = expenses.map(tx => tx.id.toString() === editingId.toString() ? { id: editingId, date, desc, category, account, amount, payer } : tx);
             updateUI();
             
@@ -184,7 +178,6 @@
             document.getElementById('form-title').innerText = "Nuevo Gasto";
             document.getElementById('submit-button').innerText = "Guardar Gasto";
         } else {
-            // MODO NUEVO GASTO
             const localId = Date.now().toString();
             const tx = { id: localId, date, desc, category, account, amount, payer };
             
@@ -197,7 +190,6 @@
         document.getElementById('date').valueAsDate = new Date();
     });
 
-    // ... (Mantengo funciones de edición y borrado intactas)
     function editExpense(id) {
         const tx = expenses.find(e => e.id.toString() === id.toString());
         if (tx) {
@@ -258,7 +250,7 @@
                     </div>
                     <div style="display: flex; align-items: center;">
                         <div style="color:var(--expense); font-weight:700; white-space: nowrap;">
-                            -$${Math.round(parseFloat(tx.amount)).toLocaleString()}
+                            -$${Math.round(parseFloat(tx.amount)).toLocaleString('es-AR')}
                         </div>
                         <button class="btn-action" style="color: var(--primary-dark);" onclick="editExpense('${tx.id}')">✏️</button>
                         <button class="btn-action" style="color: var(--expense);" onclick="deleteExpense('${tx.id}')">❌</button>
@@ -266,7 +258,8 @@
                 </div>`;
         });
         
-        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
+        // Modificado: Fuerza el formato local con puntos en el total principal
+        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString('es-AR')}`;
         
         if(filtered.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
@@ -285,7 +278,6 @@
             '#af7ac5', '#5dade2', '#ec7063', '#f4d03f', '#a9dfbf'
         ];
 
-        // Redondeamos los valores antes de pasárselos al gráfico
         const roundedValues = Object.values(data).map(val => Math.round(val));
 
         charts[id] = new Chart(document.getElementById(id), {
@@ -302,11 +294,11 @@
             options: { 
                 plugins: { 
                     title: { display: true, text: label, font: { family: 'system-ui', size: 16 } },
-                    // Formateamos el cartel flotante para agregar el signo $ y separador de miles
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return ` ${context.label}: $${context.raw.toLocaleString()}`;
+                                // Modificado: Fuerza el formato local con puntos en los carteles del gráfico
+                                return ` ${context.label}: $${context.raw.toLocaleString('es-AR')}`;
                             }
                         }
                     }
