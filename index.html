@@ -3,43 +3,61 @@
 <head>
     <meta charset="UTF-8">
     
+    <!-- Favicon para la pestaña del navegador -->
     <link rel="icon" type="image/png" href="kodacoin.png">
+
+    <!-- Icono oficial para cuando lo agregás al inicio en el iPhone -->
     <link rel="apple-touch-icon" href="kodacoin.png">
+
+    <!-- Configuración para que se abra a pantalla completa como una App nativa -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="KodaCoin">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KodaCoin | Mis Gastos</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta name="theme-color" content="#89c4f4">
     
     <style>
         :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
+        
+        /* Estilo de letras clásico y limpio del sistema */
         body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
+        
         .app-container { width: 100%; max-width: 480px; }
         .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: none; }
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
+        
+        /* Ajuste de font-size a 16px para evitar el zoom automático en iOS */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-weight: 600; font-size: 16px; }
+        
         button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
         button.btn-submit:active { transform: scale(0.98); }
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
         h1, h2, h3 { font-weight: 700; margin-top: 0; }
         canvas { margin-top: 15px; }
+        
         .btn-action { background: none; border: none; font-size: 16px; cursor: pointer; padding: 5px 0 5px 10px; transition: 0.2s; }
         .btn-action:active { transform: scale(0.85); }
+
+        /* Botón de actualizar al lado del filtro */
         .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
         .btn-refresh:active { transform: scale(0.90); }
     </style>
 </head>
 <body>
 <div class="app-container">
+    
+    <!-- Contenedor del kodacoin de la App -->
     <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
         <img src="kodacoin.png" alt="logo KodaCoin" style="width: 70px; height: auto; border-radius: 50%;">
     </div>
+    
     <h1 style="text-align:center; color: var(--primary-dark); margin-top: 5px;">KodaCoin 🐾</h1>
     
+    <!-- Filtro y Botón Actualizar juntos -->
     <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
         <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
         <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
@@ -66,7 +84,7 @@
             </select>
             <select id="account" required>
                 <option value="" disabled selected>Seleccionar cuenta</option>
-                <option>Personal Pay</option><option>Tarjeta de Credito</option><option>Debito</option><option>Efectivo</option><option>MercadoPago</option>
+                <option>Personal Pay</option><option>Tarjeta de Credito</option><option>BBVA CA</option><option>Efectivo</option><option>MercadoPago</option>
             </select>
             <input type="number" id="amount" placeholder="Monto" required>
             <select id="payer" required>
@@ -98,7 +116,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('date').valueAsDate = new Date();
-        loadData(); 
+        loadData(); // Carga inicial
     });
 
     document.getElementById('btn-refresh').addEventListener('click', loadData);
@@ -109,22 +127,16 @@
         list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Cargando datos...</p>';
         
         fetch(scriptURL).then(res => res.json()).then(data => {
-            // MAGIA ANTIBALAS: Filtramos cualquier fila que venga vacía o sin fecha del Excel
-            expenses = data.filter(tx => tx && tx.id && tx.date);
-            
+            expenses = data;
             const currentSelected = monthFilter.value;
+            
             monthFilter.innerHTML = '<option value="all">Ver todo el historial</option>';
-            
-            // Protegemos la lectura de fechas convirtiéndola siempre a texto con String()
-            const months = [...new Set(expenses.map(tx => String(tx.date).substring(0, 7)))].sort().reverse();
-            
+            const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
             months.forEach(m => { 
-                if (m.length > 5) { // Evitamos meses en blanco
-                    const opt = document.createElement('option'); 
-                    opt.value = m; 
-                    opt.text = m; 
-                    monthFilter.appendChild(opt); 
-                }
+                const opt = document.createElement('option'); 
+                opt.value = m; 
+                opt.text = m; 
+                monthFilter.appendChild(opt); 
             });
             
             if (months.includes(currentSelected)) {
@@ -138,7 +150,7 @@
             
             updateUI();
         }).catch(err => {
-            list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con el servidor.</p>';
+            list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con Google Sheets.</p>';
             console.error(err);
         });
     }
@@ -182,7 +194,7 @@
         const tx = expenses.find(e => e.id.toString() === id.toString());
         if (tx) {
             editingId = id;
-            document.getElementById('date').value = String(tx.date).split('T')[0];
+            document.getElementById('date').value = tx.date.split('T')[0];
             document.getElementById('desc').value = tx.desc;
             document.getElementById('category').value = tx.category;
             document.getElementById('account').value = tx.account;
@@ -214,7 +226,7 @@
         list.innerHTML = '';
         let total = 0, byCat = {}, byPayer = {}, byMet = {};
         
-        const filtered = expenses.filter(tx => selected === 'all' || String(tx.date).substring(0, 7) === selected);
+        const filtered = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
         
         if (filtered.length === 0) {
             list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No hay gastos en este periodo.</p>';
@@ -224,12 +236,12 @@
         }
 
         filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
-            total += parseFloat(tx.amount || 0);
-            byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount || 0);
-            byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount || 0);
-            byMet[tx.account] = (byMet[tx.account] || 0) + parseFloat(tx.amount || 0);
+            total += parseFloat(tx.amount);
+            byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount);
+            byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount);
+            byMet[tx.account] = (byMet[tx.account] || 0) + parseFloat(tx.amount);
             
-            const shortDate = String(tx.date).split('T')[0];
+            const shortDate = tx.date.split('T')[0];
             list.innerHTML += `
                 <div class="transaction-item">
                     <div>
@@ -238,7 +250,7 @@
                     </div>
                     <div style="display: flex; align-items: center;">
                         <div style="color:var(--expense); font-weight:700; white-space: nowrap;">
-                            -$${Math.round(parseFloat(tx.amount || 0)).toLocaleString('es-AR')}
+                            -$${Math.round(parseFloat(tx.amount)).toLocaleString('es-AR')}
                         </div>
                         <button class="btn-action" style="color: var(--primary-dark);" onclick="editExpense('${tx.id}')">✏️</button>
                         <button class="btn-action" style="color: var(--expense);" onclick="deleteExpense('${tx.id}')">❌</button>
@@ -246,6 +258,7 @@
                 </div>`;
         });
         
+        // Modificado: Fuerza el formato local con puntos en el total principal
         document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString('es-AR')}`;
         
         if(filtered.length > 0) {
@@ -284,6 +297,7 @@
                     tooltip: {
                         callbacks: {
                             label: function(context) {
+                                // Modificado: Fuerza el formato local con puntos en los carteles del gráfico
                                 return ` ${context.label}: $${context.raw.toLocaleString('es-AR')}`;
                             }
                         }
