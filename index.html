@@ -119,6 +119,7 @@
         loadData(); // Carga inicial
     });
 
+    // Evento para el botón de actualizar manual
     document.getElementById('btn-refresh').addEventListener('click', loadData);
     monthFilter.addEventListener('change', updateUI);
 
@@ -128,8 +129,11 @@
         
         fetch(scriptURL).then(res => res.json()).then(data => {
             expenses = data;
+            
+            // Guardamos el mes que el usuario tenía seleccionado para no perdérselo al actualizar
             const currentSelected = monthFilter.value;
             
+            // Limpiamos y reconstruimos las opciones del selector de meses
             monthFilter.innerHTML = '<option value="all">Ver todo el historial</option>';
             const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
             months.forEach(m => { 
@@ -139,6 +143,7 @@
                 monthFilter.appendChild(opt); 
             });
             
+            // Intentamos restaurar la selección de mes que estaba puesta, sino ponemos el mes actual
             if (months.includes(currentSelected)) {
                 monthFilter.value = currentSelected;
             } else {
@@ -166,6 +171,7 @@
         const payer = document.getElementById('payer').value;
 
         if (editingId) {
+            // MODO EDICIÓN
             expenses = expenses.map(tx => tx.id.toString() === editingId.toString() ? { id: editingId, date, desc, category, account, amount, payer } : tx);
             updateUI();
             
@@ -178,6 +184,7 @@
             document.getElementById('form-title').innerText = "Nuevo Gasto";
             document.getElementById('submit-button').innerText = "Guardar Gasto";
         } else {
+            // MODO NUEVO GASTO
             const localId = Date.now().toString();
             const tx = { id: localId, date, desc, category, account, amount, payer };
             
@@ -194,14 +201,17 @@
         const tx = expenses.find(e => e.id.toString() === id.toString());
         if (tx) {
             editingId = id;
+            
             document.getElementById('date').value = tx.date.split('T')[0];
             document.getElementById('desc').value = tx.desc;
             document.getElementById('category').value = tx.category;
             document.getElementById('account').value = tx.account;
             document.getElementById('amount').value = tx.amount;
             document.getElementById('payer').value = tx.payer;
+            
             document.getElementById('form-title').innerText = "Editar Gasto ✏️";
             document.getElementById('submit-button').innerText = "Actualizar Gasto";
+            
             document.getElementById('form-card').scrollIntoView({ behavior: 'smooth' });
         }
     }
@@ -210,7 +220,12 @@
         if (confirm('¿Seguro que querés borrar este gasto?')) {
             expenses = expenses.filter(tx => tx.id.toString() !== id.toString());
             updateUI();
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
+            
+            fetch(scriptURL, { 
+                method: 'POST', 
+                body: JSON.stringify({ action: 'delete', id: id }) 
+            });
+            
             if(editingId && editingId.toString() === id.toString()) {
                 editingId = null;
                 document.getElementById('tx-form').reset();
@@ -250,7 +265,7 @@
                     </div>
                     <div style="display: flex; align-items: center;">
                         <div style="color:var(--expense); font-weight:700; white-space: nowrap;">
-                            -$${Math.round(parseFloat(tx.amount)).toLocaleString('es-AR')}
+                            -$${Math.round(parseFloat(tx.amount)).toLocaleString()}
                         </div>
                         <button class="btn-action" style="color: var(--primary-dark);" onclick="editExpense('${tx.id}')">✏️</button>
                         <button class="btn-action" style="color: var(--expense);" onclick="deleteExpense('${tx.id}')">❌</button>
@@ -258,8 +273,7 @@
                 </div>`;
         });
         
-        // Modificado: Fuerza el formato local con puntos en el total principal
-        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString('es-AR')}`;
+        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
         
         if(filtered.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
@@ -278,14 +292,12 @@
             '#af7ac5', '#5dade2', '#ec7063', '#f4d03f', '#a9dfbf'
         ];
 
-        const roundedValues = Object.values(data).map(val => Math.round(val));
-
         charts[id] = new Chart(document.getElementById(id), {
             type: 'pie',
             data: { 
                 labels: Object.keys(data), 
                 datasets: [{ 
-                    data: roundedValues, 
+                    data: Object.values(data), 
                     backgroundColor: colores,
                     borderWidth: 2, 
                     borderColor: '#ffffff'
@@ -293,15 +305,7 @@
             },
             options: { 
                 plugins: { 
-                    title: { display: true, text: label, font: { family: 'system-ui', size: 16 } },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                // Modificado: Fuerza el formato local con puntos en los carteles del gráfico
-                                return ` ${context.label}: $${context.raw.toLocaleString('es-AR')}`;
-                            }
-                        }
-                    }
+                    title: { display: true, text: label, font: { family: 'system-ui', size: 16 } } 
                 } 
             }
         });
