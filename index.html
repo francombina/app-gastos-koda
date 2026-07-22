@@ -75,15 +75,6 @@
         <div class="balance-amount" id="balance-display">$0</div>
     </div>
 
-    <!-- Nueva Tarjeta: Resumen por Categoría -->
-    <div class="card" id="category-summary-card" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0;">Por Categoría</h2>
-            <small id="cat-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
-        </div>
-        <div id="category-summary-list"></div>
-    </div>
-
     <div class="card" id="form-card">
         <h2 id="form-title">Nuevo Gasto</h2>
         <form id="tx-form">
@@ -111,11 +102,21 @@
         </form>
     </div>
 
+    <!-- Sección Análisis (Gráficos) -->
     <div class="card" id="analysis-section" style="display:none">
         <h2>Análisis</h2>
         <canvas id="chart-category"></canvas>
         <canvas id="chart-payer"></canvas>
         <canvas id="chart-method"></canvas>
+    </div>
+
+    <!-- Tarjeta Resumen por Categoría (Ubicada abajo de Análisis) -->
+    <div class="card" id="category-summary-card" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Por Categoría</h2>
+            <small id="cat-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
+        </div>
+        <div id="category-summary-list"></div>
     </div>
 
     <div class="card">
