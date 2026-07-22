@@ -45,6 +45,13 @@
         /* Botón de actualizar al lado del filtro */
         .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
         .btn-refresh:active { transform: scale(0.90); }
+
+        /* Estilos para el resumen por categoría con barras de porcentaje */
+        .category-item { display: flex; flex-direction: column; padding: 12px; background: #fafbfc; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid #e1ecf4; }
+        .category-item:active { background: #e8f3fc; }
+        .category-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+        .category-bar-bg { width: 100%; height: 8px; background-color: #e1ecf4; border-radius: 10px; overflow: hidden; }
+        .category-bar-fill { height: 100%; background-color: var(--primary-dark); border-radius: 10px; transition: width 0.3s ease; }
     </style>
 </head>
 <body>
@@ -66,6 +73,15 @@
     <div class="card summary-card">
         <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
         <div class="balance-amount" id="balance-display">$0</div>
+    </div>
+
+    <!-- Nueva Tarjeta: Resumen por Categoría -->
+    <div class="card" id="category-summary-card" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0;">Por Categoría</h2>
+            <small id="cat-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
+        </div>
+        <div id="category-summary-list"></div>
     </div>
 
     <div class="card" id="form-card">
@@ -112,6 +128,7 @@
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4F9w4HYhOAKaQcLsl2RFKwNvhi3F52x7a3LT9mxaLfhLIOf-1q9DTi-aG8RIvOkVRQ/exec'; 
     let expenses = [], charts = {};
     let editingId = null; 
+    let selectedCategoryFilter = null; // Filtro activo por categoría
     const monthFilter = document.getElementById('month-filter');
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -121,7 +138,10 @@
 
     // Evento para el botón de actualizar manual
     document.getElementById('btn-refresh').addEventListener('click', loadData);
-    monthFilter.addEventListener('change', updateUI);
+    monthFilter.addEventListener('change', () => {
+        selectedCategoryFilter = null; // Resetea filtro de categoría al cambiar de mes
+        updateUI();
+    });
 
     function loadData() {
         const list = document.getElementById('tx-list');
@@ -130,7 +150,7 @@
         fetch(scriptURL).then(res => res.json()).then(data => {
             expenses = data;
             
-            // Guardamos el mes que el usuario tenía seleccionado para no perdérselo al actualizar
+            // Guardamos el mes que el usuario tenía seleccionado
             const currentSelected = monthFilter.value;
             
             // Limpiamos y reconstruimos las opciones del selector de meses
@@ -143,7 +163,6 @@
                 monthFilter.appendChild(opt); 
             });
             
-            // Intentamos restaurar la selección de mes que estaba puesta, sino ponemos el mes actual
             if (months.includes(currentSelected)) {
                 monthFilter.value = currentSelected;
             } else {
@@ -197,7 +216,6 @@
         document.getElementById('date').valueAsDate = new Date();
     });
 
-    // ... (Mantengo funciones de edición y borrado intactas)
     function editExpense(id) {
         const tx = expenses.find(e => e.id.toString() === id.toString());
         if (tx) {
@@ -234,21 +252,78 @@
         list.innerHTML = '';
         let total = 0, byCat = {}, byPayer = {}, byMet = {};
         
-        const filtered = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
+        // 1. Filtrar transacciones del período seleccionado
+        const filteredByMonth = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
         
-        if (filtered.length === 0) {
+        if (filteredByMonth.length === 0) {
             list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No hay gastos en este periodo.</p>';
             document.getElementById('analysis-section').style.display = 'none';
+            document.getElementById('category-summary-card').style.display = 'none';
         } else {
             document.getElementById('analysis-section').style.display = 'block';
+            document.getElementById('category-summary-card').style.display = 'block';
         }
 
-        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
-            total += parseFloat(tx.amount);
-            byCat[tx.category] = (byCat[tx.category] || 0) + parseFloat(tx.amount);
-            byPayer[tx.payer] = (byPayer[tx.payer] || 0) + parseFloat(tx.amount);
-            byMet[tx.account] = (byMet[tx.account] || 0) + parseFloat(tx.amount);
+        // 2. Agrupar gastos por categoría, pagador y cuenta
+        filteredByMonth.forEach(tx => {
+            const amt = parseFloat(tx.amount);
+            total += amt;
+            byCat[tx.category] = (byCat[tx.category] || 0) + amt;
+            byPayer[tx.payer] = (byPayer[tx.payer] || 0) + amt;
+            byMet[tx.account] = (byMet[tx.account] || 0) + amt;
+        });
+
+        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
+
+        // 3. Renderizar tarjeta de resumen por categoría con barras de porcentaje (ordenado de mayor a menor)
+        const catSummaryContainer = document.getElementById('category-summary-list');
+        catSummaryContainer.innerHTML = '';
+
+        const sortedCategories = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+
+        sortedCategories.forEach(([catName, catTotal]) => {
+            const percentage = total > 0 ? ((catTotal / total) * 100).toFixed(1) : 0;
+            const isSelected = selectedCategoryFilter === catName;
             
+            const catRow = document.createElement('div');
+            catRow.className = 'category-item';
+            if (isSelected) catRow.style.border = '2px solid var(--primary-dark)';
+            
+            catRow.innerHTML = `
+                <div class="category-header">
+                    <span>${catName} <small style="color:var(--text-muted); font-weight:normal;">(${percentage}%)</small></span>
+                    <span style="color:var(--text-main);">$${Math.round(catTotal).toLocaleString()}</span>
+                </div>
+                <div class="category-bar-bg">
+                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
+                </div>
+            `;
+
+            // Al hacer clic, filtra el historial de abajo por esa categoría
+            catRow.onclick = () => {
+                selectedCategoryFilter = (selectedCategoryFilter === catName) ? null : catName;
+                updateUI();
+            };
+
+            catSummaryContainer.appendChild(catRow);
+        });
+
+        // Indicador visual de si hay un filtro de categoría aplicado
+        const indicator = document.getElementById('cat-filter-indicator');
+        if (selectedCategoryFilter) {
+            indicator.innerText = `Filtrado por: ${selectedCategoryFilter} ✖`;
+            indicator.style.cursor = 'pointer';
+            indicator.onclick = () => { selectedCategoryFilter = null; updateUI(); };
+        } else {
+            indicator.innerText = '';
+        }
+
+        // 4. Filtrar lista de historial según categoría si hay una seleccionada
+        const finalFiltered = selectedCategoryFilter 
+            ? filteredByMonth.filter(tx => tx.category === selectedCategoryFilter)
+            : filteredByMonth;
+
+        finalFiltered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
             const shortDate = tx.date.split('T')[0];
             list.innerHTML += `
                 <div class="transaction-item">
@@ -265,10 +340,9 @@
                     </div>
                 </div>`;
         });
-        
-        document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
-        
-        if(filtered.length > 0) {
+
+        // 5. Crear/Actualizar Gráficos
+        if(filteredByMonth.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
             createChart('chart-payer', 'Gastos por Persona', byPayer);
             createChart('chart-method', 'Gastos por Cuenta', byMet);
@@ -285,7 +359,6 @@
             '#af7ac5', '#5dade2', '#ec7063', '#f4d03f', '#a9dfbf'
         ];
 
-        // Redondeamos los valores antes de pasárselos al gráfico
         const roundedValues = Object.values(data).map(val => Math.round(val));
 
         charts[id] = new Chart(document.getElementById(id), {
@@ -302,7 +375,6 @@
             options: { 
                 plugins: { 
                     title: { display: true, text: label, font: { family: 'system-ui', size: 16 } },
-                    // Formateamos el cartel flotante para agregar el signo $ y separador de miles
                     tooltip: {
                         callbacks: {
                             label: function(context) {
