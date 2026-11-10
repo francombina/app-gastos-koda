@@ -51,7 +51,7 @@
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
-        /* Pestañas de navegación */
+        /* Selector de 3 pestañas estilo iOS */
         .tab-switcher {
             display: flex;
             background: #e1ecf4;
@@ -62,11 +62,11 @@
         }
         .tab-btn {
             flex: 1;
-            padding: 10px 14px;
+            padding: 10px 6px;
             border: none;
             border-radius: 12px;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             background: transparent;
             color: var(--text-muted);
@@ -79,7 +79,7 @@
             box-shadow: 0 3px 10px rgba(0,0,0,0.08);
         }
 
-        /* Inputs y Selects */
+        /* Inputs y Selects (16px evita zoom en Safari iOS) */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-weight: 600; font-size: 16px; }
         
         .search-input {
@@ -109,12 +109,12 @@
         .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
         .btn-refresh:active { transform: scale(0.90); }
 
-        /* Barras de porcentaje y Semáforo */
+        /* Barras de porcentaje regulares */
         .category-item { display: flex; flex-direction: column; padding: 12px; background: #fafbfc; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid #e1ecf4; }
         .category-item:active { background: #e8f3fc; }
         .category-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
         .category-bar-bg { width: 100%; height: 8px; background-color: #e1ecf4; border-radius: 10px; overflow: hidden; }
-        .category-bar-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease; }
+        .category-bar-fill { height: 100%; background-color: var(--primary-dark); border-radius: 10px; transition: width 0.3s ease; }
 
         /* Inbox de Clasificación Rápida */
         .inbox-card {
@@ -141,6 +141,47 @@
             background: #f8fafc;
         }
 
+        /* Estilos específicos de la sección de Presupuesto */
+        .budget-config-card {
+            background: #f8fafc;
+            border: 1px dashed var(--primary-dark);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .budget-input-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .budget-input-row span {
+            font-size: 13px;
+            font-weight: 700;
+            flex: 1;
+        }
+        .budget-input-row input {
+            width: 130px;
+            margin-bottom: 0;
+            padding: 8px 10px;
+            border-radius: 12px;
+            text-align: right;
+            font-size: 14px;
+        }
+        .btn-budget-toggle {
+            background: #fafbfc;
+            border: 1px solid #e1ecf4;
+            border-radius: 12px;
+            padding: 8px 14px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--primary-dark);
+            transition: 0.2s;
+        }
+        .btn-budget-toggle:active { transform: scale(0.95); }
+
         /* Métricas históricas */
         .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
         .metric-box { background: #fafbfc; border: 1px solid #e1ecf4; padding: 14px; border-radius: 16px; text-align: center; }
@@ -164,12 +205,13 @@
 
     <!-- Pestañas de navegación -->
     <div class="tab-switcher">
-        <button class="tab-btn active" id="tab-btn-monthly" onclick="switchTab('monthly')">Gastos del Mes</button>
-        <button class="tab-btn" id="tab-btn-history" onclick="switchTab('history')">Comparativa Histórica</button>
+        <button class="tab-btn active" id="tab-btn-monthly" onclick="switchTab('monthly')">Gastos</button>
+        <button class="tab-btn" id="tab-btn-budget" onclick="switchTab('budget')">Presupuesto</button>
+        <button class="tab-btn" id="tab-btn-history" onclick="switchTab('history')">Histórico</button>
     </div>
 
     <!-- ============================================== -->
-    <!-- SECCIÓN 1: VISTA MENSUAL                       -->
+    <!-- SECCIÓN 1: VISTA MENSUAL (INICIO)              -->
     <!-- ============================================== -->
     <div id="section-monthly">
         
@@ -182,18 +224,19 @@
             <div id="inbox-list"></div>
         </div>
 
-        <!-- Filtro de Mes y Botón de Actualizar -->
+        <!-- Filtro de Mes y Actualizar -->
         <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
             <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
             <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
         </div>
         
-        <!-- Tarjeta de Balance -->
+        <!-- Total Período -->
         <div class="card summary-card">
             <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
             <div class="balance-amount" id="balance-display">$0</div>
         </div>
 
+        <!-- Formulario Nuevo Gasto -->
         <div class="card" id="form-card">
             <h2 id="form-title">Nuevo Gasto</h2>
             <form id="tx-form">
@@ -222,7 +265,7 @@
             </form>
         </div>
 
-        <!-- Sección Análisis (Gráficos Mensuales) -->
+        <!-- Gráficos del Mes -->
         <div class="card" id="analysis-section" style="display:none">
             <h2>Análisis</h2>
             <canvas id="chart-category"></canvas>
@@ -230,7 +273,7 @@
             <canvas id="chart-method"></canvas>
         </div>
 
-        <!-- Tarjeta Resumen por Categoría con Semáforo -->
+        <!-- Resumen por Categoría (Estilo Limpio Original con Barras Azules y Clic para Filtrar) -->
         <div class="card" id="category-summary-card" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0;">Por Categoría</h2>
@@ -239,7 +282,7 @@
             <div id="category-summary-list"></div>
         </div>
 
-        <!-- Tarjeta Resumen por Quién Pagó -->
+        <!-- Resumen por Quién Pagó -->
         <div class="card" id="payer-summary-card" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0;">Quién Pagó</h2>
@@ -260,7 +303,64 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- SECCIÓN 2: COMPARATIVA HISTÓRICA               -->
+    <!-- SECCIÓN 2: SEMÁFORO Y GESTIÓN DE PRESUPUESTOS  -->
+    <!-- ============================================== -->
+    <div id="section-budget" style="display: none;">
+        
+        <!-- Tarjeta de Resumen Presupuestario -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h2 style="margin:0;">Presupuesto Mensual</h2>
+                <button class="btn-budget-toggle" id="btn-toggle-config" onclick="toggleBudgetConfig()">⚙️ Ajustar Límites</button>
+            </div>
+            
+            <p id="budget-month-label" style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-muted); font-weight: 600;"></p>
+
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <div class="metric-title">Presupuestado</div>
+                    <div class="metric-value" id="budget-total-target">$0</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Consumido</div>
+                    <div class="metric-value" id="budget-total-spent" style="color: var(--text-main);">$0</div>
+                </div>
+            </div>
+
+            <!-- Progreso General -->
+            <div style="margin-top: 10px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:6px;">
+                    <span id="budget-global-status">Consumo Global</span>
+                    <span id="budget-global-pct">0%</span>
+                </div>
+                <div class="category-bar-bg" style="height:10px;">
+                    <div class="category-bar-fill" id="budget-global-bar" style="width:0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario Colapsable para Ajustar Presupuestos -->
+        <div class="card budget-config-card" id="budget-config-panel" style="display:none;">
+            <h3 style="margin-bottom: 6px; font-size: 16px;">Configurar Montos Máximos ($)</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 12px;">Ingresá el tope mensual estimado para cada categoría. Los cambios se guardan en tu dispositivo.</p>
+            
+            <div id="budget-inputs-list"></div>
+            
+            <div style="display:flex; gap: 8px; margin-top: 15px;">
+                <button class="btn-submit" style="flex:2; padding:10px;" onclick="saveCustomBudgets()">Guardar Presupuestos</button>
+                <button class="btn-budget-toggle" style="flex:1; padding:10px;" onclick="resetDefaultBudgets()">Restablecer</button>
+            </div>
+        </div>
+
+        <!-- Lista del Semáforo de Categorías -->
+        <div class="card">
+            <h2 style="margin-bottom: 15px;">Semáforo por Categoría</h2>
+            <div id="budget-semaphore-list"></div>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SECCIÓN 3: COMPARATIVA HISTÓRICA               -->
     <!-- ============================================== -->
     <div id="section-history" style="display: none;">
         <div class="card">
@@ -329,7 +429,6 @@
     const monthFilter = document.getElementById('month-filter');
     const searchInput = document.getElementById('search-input');
 
-    // Categorías del sistema
     const CATEGORIES = [
         "Verdulería/Carniceria", "Almuerzo oficina", "Casa", "Auto", "Super", 
         "Delivery", "Farmacia", "Gastos varios", "Comer afuera", "Servicios", 
@@ -337,47 +436,59 @@
         "Suscripciones", "Gimnasio/Salud", "Panaderia", "Koda"
     ];
 
-    // Presupuestos mensuales de referencia para el semáforo
-    const CATEGORY_BUDGETS = {
+    // Presupuestos mensuales iniciales
+    const DEFAULT_BUDGETS = {
         "Casa": 1350000,
         "Super": 450000,
         "Auto": 350000,
         "Servicios": 320000,
         "Verdulería/Carniceria": 120000,
-        "Delivery": 80000,
         "Comer afuera": 100000,
-        "Koda": 65000,
-        "Panaderia": 40000,
+        "Delivery": 80000,
         "Gastos varios": 70000,
-        "Farmacia": 50000,
+        "Koda": 65000,
         "Almuerzo oficina": 60000,
-        "Recreacion": 60000
+        "Recreacion": 60000,
+        "Farmacia": 50000,
+        "Panaderia": 40000
     };
+
+    function getActiveBudgets() {
+        const saved = localStorage.getItem('kodacoin_user_budgets');
+        if (saved) {
+            try { return JSON.parse(saved); } catch(e) {}
+        }
+        return { ...DEFAULT_BUDGETS };
+    }
+
+    function saveActiveBudgets(budgetsObj) {
+        localStorage.setItem('kodacoin_user_budgets', JSON.stringify(budgetsObj));
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('date').valueAsDate = new Date();
         loadData();
     });
 
+    // Control de Navegación por Pestañas
     function switchTab(tab) {
         currentTab = tab;
-        const btnMonthly = document.getElementById('tab-btn-monthly');
-        const btnHistory = document.getElementById('tab-btn-history');
-        const secMonthly = document.getElementById('section-monthly');
-        const secHistory = document.getElementById('section-history');
+        const tabs = ['monthly', 'budget', 'history'];
+        
+        tabs.forEach(t => {
+            const btn = document.getElementById(`tab-btn-${t}`);
+            const sec = document.getElementById(`section-${t}`);
+            if (t === tab) {
+                btn.classList.add('active');
+                sec.style.display = 'block';
+            } else {
+                btn.classList.remove('active');
+                sec.style.display = 'none';
+            }
+        });
 
-        if (tab === 'monthly') {
-            btnMonthly.classList.add('active');
-            btnHistory.classList.remove('active');
-            secMonthly.style.display = 'block';
-            secHistory.style.display = 'none';
-        } else {
-            btnHistory.classList.add('active');
-            btnMonthly.classList.remove('active');
-            secMonthly.style.display = 'none';
-            secHistory.style.display = 'block';
-            renderHistoricalComparison();
-        }
+        if (tab === 'budget') renderBudgetSection();
+        if (tab === 'history') renderHistoricalComparison();
     }
 
     document.getElementById('btn-refresh').addEventListener('click', loadData);
@@ -385,9 +496,9 @@
         selectedCategoryFilter = null; 
         selectedPayerFilter = null;
         updateUI();
+        if (currentTab === 'budget') renderBudgetSection();
     });
 
-    // Evento de búsqueda en vivo
     searchInput.addEventListener('input', () => {
         renderTransactionList();
     });
@@ -419,9 +530,8 @@
             }
             
             updateUI();
-            if (currentTab === 'history') {
-                renderHistoricalComparison();
-            }
+            if (currentTab === 'budget') renderBudgetSection();
+            if (currentTab === 'history') renderHistoricalComparison();
         }).catch(err => {
             list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con Google Sheets.</p>';
             console.error(err);
@@ -434,6 +544,7 @@
         if (tx) {
             tx.category = newCat;
             updateUI();
+            if (currentTab === 'budget') renderBudgetSection();
             
             fetch(scriptURL, {
                 method: 'POST',
@@ -517,11 +628,12 @@
         }
     }
 
+    // --- RENDERIZADO INICIO (GASTOS DEL MES) ---
     function updateUI() {
         const selected = monthFilter.value;
         let total = 0, byCat = {}, byPayer = {}, byMet = {};
         
-        // --- 1. RENDERIZADO DEL INBOX "SIN CATEGORIZAR" ---
+        // 1. Inbox Sin Categorizar
         const uncategorized = expenses.filter(tx => (tx.category || '').trim().toLowerCase() === 'sin categorizar');
         const inboxContainer = document.getElementById('inbox-container');
         const inboxList = document.getElementById('inbox-list');
@@ -560,7 +672,7 @@
             inboxContainer.style.display = 'none';
         }
 
-        // --- 2. FILTRAR POR MES ---
+        // 2. Filtrar transacciones por mes
         const filteredByMonth = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
         
         if (filteredByMonth.length === 0) {
@@ -583,52 +695,26 @@
 
         document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
 
-        // --- 3. RESUMEN POR CATEGORÍA CON SEMÁFORO DE PRESUPUESTO ---
+        // 3. Resumen por Categoría (Barras Azules Clásicas y Porcentaje sobre Total)
         const catSummaryContainer = document.getElementById('category-summary-list');
         catSummaryContainer.innerHTML = '';
         const sortedCategories = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
 
         sortedCategories.forEach(([catName, catTotal]) => {
+            const percentage = total > 0 ? ((catTotal / total) * 100).toFixed(1) : 0;
             const isSelected = selectedCategoryFilter === catName;
-            const budget = CATEGORY_BUDGETS[catName];
             
-            let statusDot = '';
-            let barColor = 'var(--primary-dark)';
-            let barWidth = 0;
-            let labelExtra = '';
-
-            if (budget) {
-                const pctBudget = (catTotal / budget) * 100;
-                barWidth = Math.min(pctBudget, 100);
-                
-                if (pctBudget > 100) {
-                    statusDot = '🔴';
-                    barColor = 'var(--status-red)';
-                } else if (pctBudget >= 80) {
-                    statusDot = '🟡';
-                    barColor = 'var(--status-yellow)';
-                } else {
-                    statusDot = '🟢';
-                    barColor = 'var(--status-green)';
-                }
-                labelExtra = `<small style="color:var(--text-muted); font-weight:normal;">(${statusDot} ${pctBudget.toFixed(0)}% de $${(budget/1000).toFixed(0)}k)</small>`;
-            } else {
-                const percentage = total > 0 ? ((catTotal / total) * 100).toFixed(1) : 0;
-                barWidth = percentage;
-                labelExtra = `<small style="color:var(--text-muted); font-weight:normal;">(${percentage}%)</small>`;
-            }
-
             const catRow = document.createElement('div');
             catRow.className = 'category-item';
             if (isSelected) catRow.style.border = '2px solid var(--primary-dark)';
             
             catRow.innerHTML = `
                 <div class="category-header">
-                    <span>${catName} ${labelExtra}</span>
+                    <span>${catName} <small style="color:var(--text-muted); font-weight:normal;">(${percentage}%)</small></span>
                     <span style="color:var(--text-main);">$${Math.round(catTotal).toLocaleString()}</span>
                 </div>
                 <div class="category-bar-bg">
-                    <div class="category-bar-fill" style="width: ${barWidth}%; background-color: ${barColor};"></div>
+                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
                 </div>
             `;
 
@@ -640,7 +726,7 @@
             catSummaryContainer.appendChild(catRow);
         });
 
-        // --- 4. RESUMEN POR QUIÉN PAGÓ ---
+        // 4. Resumen por Quién Pagó
         const payerSummaryContainer = document.getElementById('payer-summary-list');
         payerSummaryContainer.innerHTML = '';
         const sortedPayers = Object.entries(byPayer).sort((a, b) => b[1] - a[1]);
@@ -659,7 +745,7 @@
                     <span style="color:var(--text-main);">$${Math.round(payerTotal).toLocaleString()}</span>
                 </div>
                 <div class="category-bar-bg">
-                    <div class="category-bar-fill" style="width: ${percentage}%; background-color: var(--primary-dark);"></div>
+                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
                 </div>
             `;
 
@@ -690,10 +776,9 @@
             payerIndicator.innerText = '';
         }
 
-        // Renderizar lista filtrada
         renderTransactionList();
 
-        // Gráficos circulares
+        // Gráficos circulares mensuales
         if(filteredByMonth.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
             createChart('chart-payer', 'Gastos por Persona', byPayer);
@@ -701,7 +786,7 @@
         }
     }
 
-    // --- 5. RENDERIZADO DEL HISTORIAL CON BÚSQUEDA EN VIVO ---
+    // --- BÚSQUEDA EN VIVO EN HISTORIAL ---
     function renderTransactionList() {
         const list = document.getElementById('tx-list');
         const countDisplay = document.getElementById('tx-count');
@@ -749,7 +834,155 @@
         });
     }
 
-    // --- 6. COMPARATIVA HISTÓRICA ---
+    // ==============================================
+    // SECCIÓN 2: LÓGICA DEL SEMÁFORO Y PRESUPUESTOS
+    // ==============================================
+    function toggleBudgetConfig() {
+        const panel = document.getElementById('budget-config-panel');
+        const btn = document.getElementById('btn-toggle-config');
+        if (panel.style.display === 'none') {
+            renderBudgetInputs();
+            panel.style.display = 'block';
+            btn.innerText = 'Cerrar Ajuste';
+        } else {
+            panel.style.display = 'none';
+            btn.innerText = '⚙️ Ajustar Límites';
+        }
+    }
+
+    function renderBudgetInputs() {
+        const container = document.getElementById('budget-inputs-list');
+        const currentBudgets = getActiveBudgets();
+        container.innerHTML = '';
+
+        CATEGORIES.forEach(cat => {
+            const val = currentBudgets[cat] || 0;
+            const row = document.createElement('div');
+            row.className = 'budget-input-row';
+            row.innerHTML = `
+                <span>${cat}</span>
+                <input type="number" id="budget-input-${cat}" value="${val}" placeholder="0" step="5000">
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function saveCustomBudgets() {
+        const newBudgets = {};
+        CATEGORIES.forEach(cat => {
+            const input = document.getElementById(`budget-input-${cat}`);
+            if (input) {
+                const val = parseFloat(input.value) || 0;
+                if (val > 0) newBudgets[cat] = val;
+            }
+        });
+        saveActiveBudgets(newBudgets);
+        toggleBudgetConfig();
+        renderBudgetSection();
+    }
+
+    function resetDefaultBudgets() {
+        if (confirm('¿Restablecer los presupuestos a los valores por defecto?')) {
+            saveActiveBudgets(DEFAULT_BUDGETS);
+            renderBudgetInputs();
+            renderBudgetSection();
+        }
+    }
+
+    function renderBudgetSection() {
+        const selected = monthFilter.value;
+        const currentBudgets = getActiveBudgets();
+        const semaphoreList = document.getElementById('budget-semaphore-list');
+        const monthLabel = document.getElementById('budget-month-label');
+        semaphoreList.innerHTML = '';
+
+        monthLabel.innerText = selected === 'all' 
+            ? 'Analizando: Todo el Historial Acumulado' 
+            : `Analizando el mes: ${selected}`;
+
+        // Gastos agrupados por categoría para el período
+        const filtered = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
+        const catSpent = {};
+        filtered.forEach(tx => {
+            catSpent[tx.category] = (catSpent[tx.category] || 0) + (parseFloat(tx.amount) || 0);
+        });
+
+        let totalTarget = 0;
+        let totalSpentOnBudgeted = 0;
+
+        // Renderizar cada categoría que tenga presupuesto
+        Object.keys(currentBudgets).forEach(cat => {
+            const target = currentBudgets[cat];
+            const spent = catSpent[cat] || 0;
+            totalTarget += target;
+            totalSpentOnBudgeted += spent;
+
+            const pct = target > 0 ? (spent / target) * 100 : 0;
+            const barWidth = Math.min(pct, 100);
+
+            let statusIcon = '🟢';
+            let barColor = 'var(--status-green)';
+            let diffText = '';
+
+            if (pct > 100) {
+                statusIcon = '🔴';
+                barColor = 'var(--status-red)';
+                const diff = spent - target;
+                diffText = `<span style="color:var(--status-red);">Excedido por $${Math.round(diff).toLocaleString()}</span>`;
+            } else if (pct >= 80) {
+                statusIcon = '🟡';
+                barColor = 'var(--status-yellow)';
+                const diff = target - spent;
+                diffText = `<span style="color:var(--status-yellow);">Restan $${Math.round(diff).toLocaleString()}</span>`;
+            } else {
+                statusIcon = '🟢';
+                barColor = 'var(--status-green)';
+                const diff = target - spent;
+                diffText = `<span style="color:var(--text-muted);">Restan $${Math.round(diff).toLocaleString()}</span>`;
+            }
+
+            const item = document.createElement('div');
+            item.className = 'category-item';
+            item.style.cursor = 'default';
+            item.innerHTML = `
+                <div class="category-header">
+                    <span>${statusIcon} ${cat} <small style="color:var(--text-muted); font-weight:normal;">(${pct.toFixed(0)}%)</small></span>
+                    <span style="color:var(--text-main);">$${Math.round(spent).toLocaleString()} <span style="color:var(--text-muted); font-weight:normal;">/ $${Math.round(target).toLocaleString()}</span></span>
+                </div>
+                <div class="category-bar-bg" style="margin-bottom: 5px;">
+                    <div class="category-bar-fill" style="width: ${barWidth}%; background-color: ${barColor};"></div>
+                </div>
+                <div style="font-size: 11px; text-align: right; font-weight: 600;">
+                    ${diffText}
+                </div>
+            `;
+            semaphoreList.appendChild(item);
+        });
+
+        // Métricas de cabecera
+        document.getElementById('budget-total-target').innerText = `$${Math.round(totalTarget).toLocaleString()}`;
+        document.getElementById('budget-total-spent').innerText = `$${Math.round(totalSpentOnBudgeted).toLocaleString()}`;
+
+        const globalPct = totalTarget > 0 ? (totalSpentOnBudgeted / totalTarget) * 100 : 0;
+        document.getElementById('budget-global-pct').innerText = `${globalPct.toFixed(1)}%`;
+        
+        const globalBar = document.getElementById('budget-global-bar');
+        globalBar.style.width = `${Math.min(globalPct, 100)}%`;
+        if (globalPct > 100) {
+            globalBar.style.backgroundColor = 'var(--status-red)';
+            document.getElementById('budget-global-status').innerText = '🔴 Presupuesto Excedido';
+        } else if (globalPct >= 80) {
+            globalBar.style.backgroundColor = 'var(--status-yellow)';
+            document.getElementById('budget-global-status').innerText = '🟡 Atención: Cerca del Límite';
+        } else {
+            globalBar.style.backgroundColor = 'var(--status-green)';
+            document.getElementById('budget-global-status').innerText = '🟢 Consumo Saludable';
+        }
+    }
+
+    // ==============================================
+    // SECCIÓN 3: COMPARATIVA HISTÓRICA
+    // ==============================================
     function renderHistoricalComparison() {
         if (!expenses || expenses.length === 0) return;
 
@@ -795,7 +1028,7 @@
         document.getElementById('hist-avg-display').innerText = `$${avgMonthly.toLocaleString()}`;
         document.getElementById('hist-peak-display').innerText = `${maxMonth} ($${Math.round(maxVal).toLocaleString()})`;
 
-        // Gráfico Evolución Total
+        // Gráfico Evolución
         if (charts['chart-history-trend']) charts['chart-history-trend'].destroy();
         charts['chart-history-trend'] = new Chart(document.getElementById('chart-history-trend'), {
             type: 'bar',
@@ -864,7 +1097,7 @@
                     <span style="color:var(--text-main);">$${Math.round(catTotal).toLocaleString()}</span>
                 </div>
                 <div class="category-bar-bg" style="margin-bottom: 6px;">
-                    <div class="category-bar-fill" style="width: ${percentage}%; background-color: var(--primary-dark);"></div>
+                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted); text-align: right;">
                     Promedio mensual: <b style="color: var(--primary-dark);">$${avgPerMonth.toLocaleString()}</b>
