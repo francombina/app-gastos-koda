@@ -30,6 +30,9 @@
             --expense: #ff9e9e; 
             --warning-bg: #fff9db;
             --warning-border: #ffe066;
+            --status-green: #40c057;
+            --status-yellow: #fab005;
+            --status-red: #fa5252;
             --border-radius: 20px; 
         }
         
@@ -48,7 +51,7 @@
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
-        /* Pestañas estilo iOS */
+        /* Pestañas de navegación */
         .tab-switcher {
             display: flex;
             background: #e1ecf4;
@@ -79,6 +82,20 @@
         /* Inputs y Selects */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-weight: 600; font-size: 16px; }
         
+        .search-input {
+            padding: 12px 16px;
+            border: 2px solid #e1ecf4;
+            border-radius: 16px;
+            font-size: 15px;
+            background: #fafbfc;
+            margin-bottom: 15px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            background: #ffffff;
+        }
+
         button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
         button.btn-submit:active { transform: scale(0.98); }
         
@@ -92,14 +109,14 @@
         .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
         .btn-refresh:active { transform: scale(0.90); }
 
-        /* Barras de porcentaje */
+        /* Barras de porcentaje y Semáforo */
         .category-item { display: flex; flex-direction: column; padding: 12px; background: #fafbfc; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid #e1ecf4; }
         .category-item:active { background: #e8f3fc; }
         .category-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
         .category-bar-bg { width: 100%; height: 8px; background-color: #e1ecf4; border-radius: 10px; overflow: hidden; }
-        .category-bar-fill { height: 100%; background-color: var(--primary-dark); border-radius: 10px; transition: width 0.3s ease; }
+        .category-bar-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease; }
 
-        /* Estilo Inbox de Clasificación Rápida */
+        /* Inbox de Clasificación Rápida */
         .inbox-card {
             border: 2px solid var(--warning-border);
             background: var(--warning-bg);
@@ -123,19 +140,6 @@
             font-size: 14px;
             background: #f8fafc;
         }
-
-        /* Burn Rate y Proyecciones */
-        .burnrate-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px dashed #cde2f3;
-        }
-        .burnrate-item { text-align: center; }
-        .burnrate-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
-        .burnrate-val { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 2px; }
 
         /* Métricas históricas */
         .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
@@ -169,7 +173,7 @@
     <!-- ============================================== -->
     <div id="section-monthly">
         
-        <!-- INBOX DE CLASIFICACIÓN RÁPIDA (Solo visible si hay gastos 'Sin Categorizar') -->
+        <!-- INBOX DE CLASIFICACIÓN RÁPIDA -->
         <div id="inbox-container" class="inbox-card" style="display: none;">
             <div class="inbox-header">
                 <span style="font-weight: 800; font-size: 14px; color: #856404;">📥 Inbox: Sin Categorizar</span>
@@ -178,26 +182,16 @@
             <div id="inbox-list"></div>
         </div>
 
+        <!-- Filtro de Mes y Botón de Actualizar -->
         <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
             <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
             <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
         </div>
         
+        <!-- Tarjeta de Balance -->
         <div class="card summary-card">
             <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
             <div class="balance-amount" id="balance-display">$0</div>
-            
-            <!-- RITMO DE GASTO DIARIO & PROYECCIÓN -->
-            <div class="burnrate-grid" id="burnrate-section" style="display: none;">
-                <div class="burnrate-item">
-                    <div class="burnrate-label">Ritmo Diario</div>
-                    <div class="burnrate-val" id="daily-burn-display">$0</div>
-                </div>
-                <div class="burnrate-item">
-                    <div class="burnrate-label" id="projection-label">Proyección Cierre</div>
-                    <div class="burnrate-val" id="projection-display" style="color: var(--primary-dark);">$0</div>
-                </div>
-            </div>
         </div>
 
         <div class="card" id="form-card">
@@ -236,7 +230,7 @@
             <canvas id="chart-method"></canvas>
         </div>
 
-        <!-- Tarjeta Resumen por Categoría -->
+        <!-- Tarjeta Resumen por Categoría con Semáforo -->
         <div class="card" id="category-summary-card" style="display:none;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h2 style="margin:0;">Por Categoría</h2>
@@ -254,8 +248,13 @@
             <div id="payer-summary-list"></div>
         </div>
 
+        <!-- Historial con Buscador en Vivo -->
         <div class="card">
-            <h2>Historial</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0;">Historial</h2>
+                <small id="tx-count" style="color:var(--text-muted); font-weight:bold;"></small>
+            </div>
+            <input type="text" id="search-input" class="search-input" placeholder="🔍 Buscar por concepto, cuenta o monto...">
             <div id="tx-list">Cargando...</div>
         </div>
     </div>
@@ -328,13 +327,32 @@
     let selectedPayerFilter = null;
     let currentTab = 'monthly';
     const monthFilter = document.getElementById('month-filter');
+    const searchInput = document.getElementById('search-input');
 
+    // Categorías del sistema
     const CATEGORIES = [
         "Verdulería/Carniceria", "Almuerzo oficina", "Casa", "Auto", "Super", 
         "Delivery", "Farmacia", "Gastos varios", "Comer afuera", "Servicios", 
         "Recreacion", "Regalos", "Tarjeta de Credito", "Transporte", "Vacaciones", 
         "Suscripciones", "Gimnasio/Salud", "Panaderia", "Koda"
     ];
+
+    // Presupuestos mensuales de referencia para el semáforo
+    const CATEGORY_BUDGETS = {
+        "Casa": 1350000,
+        "Super": 450000,
+        "Auto": 350000,
+        "Servicios": 320000,
+        "Verdulería/Carniceria": 120000,
+        "Delivery": 80000,
+        "Comer afuera": 100000,
+        "Koda": 65000,
+        "Panaderia": 40000,
+        "Gastos varios": 70000,
+        "Farmacia": 50000,
+        "Almuerzo oficina": 60000,
+        "Recreacion": 60000
+    };
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('date').valueAsDate = new Date();
@@ -367,6 +385,11 @@
         selectedCategoryFilter = null; 
         selectedPayerFilter = null;
         updateUI();
+    });
+
+    // Evento de búsqueda en vivo
+    searchInput.addEventListener('input', () => {
+        renderTransactionList();
     });
 
     function loadData() {
@@ -405,7 +428,6 @@
         });
     }
 
-    // Clasificación Rápida de Gastos desde el Inbox
     function quickCategorize(id, newCat) {
         if (!newCat) return;
         const tx = expenses.find(e => e.id.toString() === id.toString());
@@ -496,8 +518,7 @@
     }
 
     function updateUI() {
-        const list = document.getElementById('tx-list'), selected = monthFilter.value;
-        list.innerHTML = '';
+        const selected = monthFilter.value;
         let total = 0, byCat = {}, byPayer = {}, byMet = {};
         
         // --- 1. RENDERIZADO DEL INBOX "SIN CATEGORIZAR" ---
@@ -543,11 +564,9 @@
         const filteredByMonth = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
         
         if (filteredByMonth.length === 0) {
-            list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No hay gastos en este periodo.</p>';
             document.getElementById('analysis-section').style.display = 'none';
             document.getElementById('category-summary-card').style.display = 'none';
             document.getElementById('payer-summary-card').style.display = 'none';
-            document.getElementById('burnrate-section').style.display = 'none';
         } else {
             document.getElementById('analysis-section').style.display = 'block';
             document.getElementById('category-summary-card').style.display = 'block';
@@ -564,53 +583,52 @@
 
         document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
 
-        // --- 3. RITMO DIARIO & PROYECCIÓN ---
-        const burnRateSec = document.getElementById('burnrate-section');
-        if (selected === 'all' || filteredByMonth.length === 0) {
-            burnRateSec.style.display = 'none';
-        } else {
-            burnRateSec.style.display = 'grid';
-            const [selYear, selMonth] = selected.split('-').map(Number);
-            const totalDaysInMonth = new Date(selYear, selMonth, 0).getDate();
-            const now = new Date();
-            const isCurrentMonth = (now.getFullYear() === selYear && (now.getMonth() + 1) === selMonth);
-
-            if (isCurrentMonth) {
-                const currentDay = Math.max(1, now.getDate());
-                const dailyBurn = total / currentDay;
-                const projectedTotal = dailyBurn * totalDaysInMonth;
-
-                document.getElementById('daily-burn-display').innerText = `$${Math.round(dailyBurn).toLocaleString()}/d`;
-                document.getElementById('projection-label').innerText = `Proyección Cierre (${currentDay}/${totalDaysInMonth})`;
-                document.getElementById('projection-display').innerText = `$${Math.round(projectedTotal).toLocaleString()}`;
-            } else {
-                const dailyBurn = total / totalDaysInMonth;
-                document.getElementById('daily-burn-display').innerText = `$${Math.round(dailyBurn).toLocaleString()}/d`;
-                document.getElementById('projection-label').innerText = `Mes Cerrado (${totalDaysInMonth} días)`;
-                document.getElementById('projection-display').innerText = `$${Math.round(total).toLocaleString()}`;
-            }
-        }
-
-        // --- 4. RESUMEN POR CATEGORÍA ---
+        // --- 3. RESUMEN POR CATEGORÍA CON SEMÁFORO DE PRESUPUESTO ---
         const catSummaryContainer = document.getElementById('category-summary-list');
         catSummaryContainer.innerHTML = '';
         const sortedCategories = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
 
         sortedCategories.forEach(([catName, catTotal]) => {
-            const percentage = total > 0 ? ((catTotal / total) * 100).toFixed(1) : 0;
             const isSelected = selectedCategoryFilter === catName;
+            const budget = CATEGORY_BUDGETS[catName];
             
+            let statusDot = '';
+            let barColor = 'var(--primary-dark)';
+            let barWidth = 0;
+            let labelExtra = '';
+
+            if (budget) {
+                const pctBudget = (catTotal / budget) * 100;
+                barWidth = Math.min(pctBudget, 100);
+                
+                if (pctBudget > 100) {
+                    statusDot = '🔴';
+                    barColor = 'var(--status-red)';
+                } else if (pctBudget >= 80) {
+                    statusDot = '🟡';
+                    barColor = 'var(--status-yellow)';
+                } else {
+                    statusDot = '🟢';
+                    barColor = 'var(--status-green)';
+                }
+                labelExtra = `<small style="color:var(--text-muted); font-weight:normal;">(${statusDot} ${pctBudget.toFixed(0)}% de $${(budget/1000).toFixed(0)}k)</small>`;
+            } else {
+                const percentage = total > 0 ? ((catTotal / total) * 100).toFixed(1) : 0;
+                barWidth = percentage;
+                labelExtra = `<small style="color:var(--text-muted); font-weight:normal;">(${percentage}%)</small>`;
+            }
+
             const catRow = document.createElement('div');
             catRow.className = 'category-item';
             if (isSelected) catRow.style.border = '2px solid var(--primary-dark)';
             
             catRow.innerHTML = `
                 <div class="category-header">
-                    <span>${catName} <small style="color:var(--text-muted); font-weight:normal;">(${percentage}%)</small></span>
+                    <span>${catName} ${labelExtra}</span>
                     <span style="color:var(--text-main);">$${Math.round(catTotal).toLocaleString()}</span>
                 </div>
                 <div class="category-bar-bg">
-                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
+                    <div class="category-bar-fill" style="width: ${barWidth}%; background-color: ${barColor};"></div>
                 </div>
             `;
 
@@ -622,7 +640,7 @@
             catSummaryContainer.appendChild(catRow);
         });
 
-        // --- 5. RESUMEN POR QUIÉN PAGÓ ---
+        // --- 4. RESUMEN POR QUIÉN PAGÓ ---
         const payerSummaryContainer = document.getElementById('payer-summary-list');
         payerSummaryContainer.innerHTML = '';
         const sortedPayers = Object.entries(byPayer).sort((a, b) => b[1] - a[1]);
@@ -641,7 +659,7 @@
                     <span style="color:var(--text-main);">$${Math.round(payerTotal).toLocaleString()}</span>
                 </div>
                 <div class="category-bar-bg">
-                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
+                    <div class="category-bar-fill" style="width: ${percentage}%; background-color: var(--primary-dark);"></div>
                 </div>
             `;
 
@@ -672,32 +690,8 @@
             payerIndicator.innerText = '';
         }
 
-        // --- 6. HISTORIAL DE GASTOS ---
-        let finalFiltered = filteredByMonth;
-        if (selectedCategoryFilter) finalFiltered = finalFiltered.filter(tx => tx.category === selectedCategoryFilter);
-        if (selectedPayerFilter) finalFiltered = finalFiltered.filter(tx => tx.payer === selectedPayerFilter);
-
-        if (finalFiltered.length === 0) {
-            list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No hay gastos con los filtros aplicados.</p>';
-        } else {
-            finalFiltered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
-                const shortDate = tx.date.split('T')[0];
-                list.innerHTML += `
-                    <div class="transaction-item">
-                        <div>
-                            <b>${tx.desc}</b><br>
-                            <small style="color:var(--text-muted)">${shortDate} • ${tx.category} • ${tx.payer} • ${tx.account}</small>
-                        </div>
-                        <div style="display: flex; align-items: center;">
-                            <div style="color:var(--expense); font-weight:700; white-space: nowrap;">
-                                -$${Math.round(parseFloat(tx.amount)).toLocaleString()}
-                            </div>
-                            <button class="btn-action" style="color: var(--primary-dark);" onclick="editExpense('${tx.id}')">✏️</button>
-                            <button class="btn-action" style="color: var(--expense);" onclick="deleteExpense('${tx.id}')">❌</button>
-                        </div>
-                    </div>`;
-            });
-        }
+        // Renderizar lista filtrada
+        renderTransactionList();
 
         // Gráficos circulares
         if(filteredByMonth.length > 0) {
@@ -707,7 +701,55 @@
         }
     }
 
-    // --- 7. RENDERIZADO COMPARATIVA HISTÓRICA ---
+    // --- 5. RENDERIZADO DEL HISTORIAL CON BÚSQUEDA EN VIVO ---
+    function renderTransactionList() {
+        const list = document.getElementById('tx-list');
+        const countDisplay = document.getElementById('tx-count');
+        const selected = monthFilter.value;
+        const query = searchInput.value.toLowerCase().trim();
+
+        let filtered = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
+        if (selectedCategoryFilter) filtered = filtered.filter(tx => tx.category === selectedCategoryFilter);
+        if (selectedPayerFilter) filtered = filtered.filter(tx => tx.payer === selectedPayerFilter);
+
+        if (query) {
+            filtered = filtered.filter(tx => 
+                (tx.desc || '').toLowerCase().includes(query) ||
+                (tx.category || '').toLowerCase().includes(query) ||
+                (tx.payer || '').toLowerCase().includes(query) ||
+                (tx.account || '').toLowerCase().includes(query) ||
+                (tx.amount || '').toString().includes(query)
+            );
+        }
+
+        countDisplay.innerText = `${filtered.length} gastos`;
+
+        if (filtered.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding: 15px 0;">No se encontraron gastos.</p>';
+            return;
+        }
+
+        list.innerHTML = '';
+        filtered.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(tx => {
+            const shortDate = tx.date.split('T')[0];
+            list.innerHTML += `
+                <div class="transaction-item">
+                    <div>
+                        <b>${tx.desc}</b><br>
+                        <small style="color:var(--text-muted)">${shortDate} • ${tx.category} • ${tx.payer} • ${tx.account}</small>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="color:var(--expense); font-weight:700; white-space: nowrap;">
+                            -$${Math.round(parseFloat(tx.amount)).toLocaleString()}
+                        </div>
+                        <button class="btn-action" style="color: var(--primary-dark);" onclick="editExpense('${tx.id}')">✏️</button>
+                        <button class="btn-action" style="color: var(--expense);" onclick="deleteExpense('${tx.id}')">❌</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    // --- 6. COMPARATIVA HISTÓRICA ---
     function renderHistoricalComparison() {
         if (!expenses || expenses.length === 0) return;
 
@@ -822,7 +864,7 @@
                     <span style="color:var(--text-main);">$${Math.round(catTotal).toLocaleString()}</span>
                 </div>
                 <div class="category-bar-bg" style="margin-bottom: 6px;">
-                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
+                    <div class="category-bar-fill" style="width: ${percentage}%; background-color: var(--primary-dark);"></div>
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted); text-align: right;">
                     Promedio mensual: <b style="color: var(--primary-dark);">$${avgPerMonth.toLocaleString()}</b>
