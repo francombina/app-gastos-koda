@@ -20,21 +20,66 @@
     <meta name="theme-color" content="#89c4f4">
     
     <style>
-        :root { --bg-color: #f0f7ff; --card-bg: #ffffff; --primary: #89c4f4; --primary-dark: #63a4d6; --text-main: #334e68; --text-muted: #627d98; --expense: #ff9e9e; --border-radius: 20px; }
+        :root { 
+            --bg-color: #f0f7ff; 
+            --card-bg: #ffffff; 
+            --primary: #89c4f4; 
+            --primary-dark: #63a4d6; 
+            --text-main: #334e68; 
+            --text-muted: #627d98; 
+            --expense: #ff9e9e; 
+            --border-radius: 20px; 
+        }
         
-        /* Estilo de letras clásico y limpio del sistema */
-        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; display: flex; justify-content: center; color: var(--text-main); }
+        body { 
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 20px 16px; 
+            display: flex; 
+            justify-content: center; 
+            color: var(--text-main); 
+        }
         
         .app-container { width: 100%; max-width: 480px; }
         .card { background: var(--card-bg); border-radius: var(--border-radius); padding: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px; border: none; }
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
-        /* Ajuste de font-size a 16px para evitar el zoom automático en iOS */
+        /* Selector de pestañas estilo iOS */
+        .tab-switcher {
+            display: flex;
+            background: #e1ecf4;
+            border-radius: 16px;
+            padding: 4px;
+            margin-bottom: 20px;
+            gap: 4px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        .tab-btn.active {
+            background: #ffffff;
+            color: var(--primary-dark);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        /* Inputs y Selects */
         input, select { width: 100%; padding: 14px; border: 2px solid #e1ecf4; border-radius: 20px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; font-weight: 600; font-size: 16px; }
         
         button.btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 20px; font-weight: 700; cursor: pointer; transition: 0.2s; font-family: inherit; }
         button.btn-submit:active { transform: scale(0.98); }
+        
         .transaction-item { display: flex; justify-content: space-between; align-items: center; background: #fafbfc; padding: 15px; border-radius: 20px; margin-bottom: 10px; }
         h1, h2, h3 { font-weight: 700; margin-top: 0; }
         canvas { margin-top: 15px; }
@@ -42,115 +87,223 @@
         .btn-action { background: none; border: none; font-size: 16px; cursor: pointer; padding: 5px 0 5px 10px; transition: 0.2s; }
         .btn-action:active { transform: scale(0.85); }
 
-        /* Botón de actualizar al lado del filtro */
         .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
         .btn-refresh:active { transform: scale(0.90); }
 
-        /* Estilos para las tarjetas de resumen por categoría y pagador */
+        /* Barras de porcentaje para categorías y pagadores */
         .category-item { display: flex; flex-direction: column; padding: 12px; background: #fafbfc; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid #e1ecf4; }
         .category-item:active { background: #e8f3fc; }
         .category-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
         .category-bar-bg { width: 100%; height: 8px; background-color: #e1ecf4; border-radius: 10px; overflow: hidden; }
         .category-bar-fill { height: 100%; background-color: var(--primary-dark); border-radius: 10px; transition: width 0.3s ease; }
+
+        /* Métricas de la comparativa histórica */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .metric-box {
+            background: #fafbfc;
+            border: 1px solid #e1ecf4;
+            padding: 14px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .metric-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .metric-value { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
+
+        /* Tabla comparativa histórica */
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .history-table th { text-align: left; padding: 10px 8px; color: var(--text-muted); border-bottom: 2px solid #e1ecf4; font-weight: 700; }
+        .history-table td { padding: 12px 8px; border-bottom: 1px solid #f0f4f8; }
+        .history-table tr:last-child td { border-bottom: none; }
     </style>
 </head>
 <body>
 <div class="app-container">
     
-    <!-- Contenedor del kodacoin de la App -->
     <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
         <img src="kodacoin.png" alt="logo KodaCoin" style="width: 70px; height: auto; border-radius: 50%;">
     </div>
     
-    <h1 style="text-align:center; color: var(--primary-dark); margin-top: 5px;">KodaCoin 🐾</h1>
-    
-    <!-- Filtro y Botón Actualizar juntos -->
-    <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
-        <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
-        <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
-    </div>
-    
-    <div class="card summary-card">
-        <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
-        <div class="balance-amount" id="balance-display">$0</div>
+    <h1 style="text-align:center; color: var(--primary-dark); margin-top: 5px; margin-bottom: 15px;">KodaCoin 🐾</h1>
+
+    <!-- Pestañas de navegación -->
+    <div class="tab-switcher">
+        <button class="tab-btn active" id="tab-btn-monthly" onclick="switchTab('monthly')">Gastos del Mes</button>
+        <button class="tab-btn" id="tab-btn-history" onclick="switchTab('history')">Comparativa Histórica</button>
     </div>
 
-    <div class="card" id="form-card">
-        <h2 id="form-title">Nuevo Gasto</h2>
-        <form id="tx-form">
-            <input type="date" id="date" required>
-            <input type="text" id="desc" placeholder="Concepto" required>
-            <select id="category" required>
-                <option value="" disabled selected>Seleccionar categoría</option>
-                <option>Verdulería/Carniceria</option><option>Almuerzo oficina</option><option>Casa</option>
-                <option>Auto</option><option>Super</option><option>Delivery</option><option>Farmacia</option>
-                <option>Gastos varios</option><option>Comer afuera</option><option>Servicios</option>
-                <option>Recreacion</option><option>Regalos</option><option>Tarjeta de Credito</option>
-                <option>Transporte</option><option>Vacaciones</option><option>Suscripciones</option>
-                <option>Gimnasio/Salud</option><option>Panaderia</option><option>Koda</option>
-            </select>
-            <select id="account" required>
-                <option value="" disabled selected>Seleccionar cuenta</option>
-                <option>Personal Pay</option><option>Tarjeta de Credito</option><option>Debito</option><option>Efectivo</option><option>MercadoPago</option>
-            </select>
-            <input type="number" id="amount" placeholder="Monto" required>
-            <select id="payer" required>
-                <option value="" disabled selected>Quién pagó</option>
-                <option>Fran</option><option>Agus</option><option>Compartido</option>
-            </select>
-            <button type="submit" class="btn-submit" id="submit-button">Guardar Gasto</button>
-        </form>
-    </div>
-
-    <!-- Sección Análisis (Gráficos) -->
-    <div class="card" id="analysis-section" style="display:none">
-        <h2>Análisis</h2>
-        <canvas id="chart-category"></canvas>
-        <canvas id="chart-payer"></canvas>
-        <canvas id="chart-method"></canvas>
-    </div>
-
-    <!-- Tarjeta Resumen por Categoría -->
-    <div class="card" id="category-summary-card" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0;">Por Categoría</h2>
-            <small id="cat-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
+    <!-- ============================================== -->
+    <!-- SECCIÓN 1: VISTA MENSUAL (INICIO HABITUAL)     -->
+    <!-- ============================================== -->
+    <div id="section-monthly">
+        <!-- Filtro y Botón Actualizar -->
+        <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
+            <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
+            <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
         </div>
-        <div id="category-summary-list"></div>
-    </div>
-
-    <!-- Tarjeta Resumen por Quién Pagó -->
-    <div class="card" id="payer-summary-card" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0;">Quién Pagó</h2>
-            <small id="payer-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
+        
+        <div class="card summary-card">
+            <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
+            <div class="balance-amount" id="balance-display">$0</div>
         </div>
-        <div id="payer-summary-list"></div>
+
+        <div class="card" id="form-card">
+            <h2 id="form-title">Nuevo Gasto</h2>
+            <form id="tx-form">
+                <input type="date" id="date" required>
+                <input type="text" id="desc" placeholder="Concepto" required>
+                <select id="category" required>
+                    <option value="" disabled selected>Seleccionar categoría</option>
+                    <option>Verdulería/Carniceria</option><option>Almuerzo oficina</option><option>Casa</option>
+                    <option>Auto</option><option>Super</option><option>Delivery</option><option>Farmacia</option>
+                    <option>Gastos varios</option><option>Comer afuera</option><option>Servicios</option>
+                    <option>Recreacion</option><option>Regalos</option><option>Tarjeta de Credito</option>
+                    <option>Transporte</option><option>Vacaciones</option><option>Suscripciones</option>
+                    <option>Gimnasio/Salud</option><option>Panaderia</option><option>Koda</option>
+                </select>
+                <select id="account" required>
+                    <option value="" disabled selected>Seleccionar cuenta</option>
+                    <option>Personal Pay</option><option>Tarjeta de Credito</option><option>Debito</option><option>Efectivo</option><option>MercadoPago</option>
+                </select>
+                <input type="number" id="amount" placeholder="Monto" required>
+                <select id="payer" required>
+                    <option value="" disabled selected>Quién pagó</option>
+                    <option>Fran</option><option>Agus</option><option>Compartido</option>
+                </select>
+                <button type="submit" class="btn-submit" id="submit-button">Guardar Gasto</button>
+            </form>
+        </div>
+
+        <!-- Sección Análisis (Gráficos Mensuales) -->
+        <div class="card" id="analysis-section" style="display:none">
+            <h2>Análisis</h2>
+            <canvas id="chart-category"></canvas>
+            <canvas id="chart-payer"></canvas>
+            <canvas id="chart-method"></canvas>
+        </div>
+
+        <!-- Tarjeta Resumen por Categoría -->
+        <div class="card" id="category-summary-card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0;">Por Categoría</h2>
+                <small id="cat-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
+            </div>
+            <div id="category-summary-list"></div>
+        </div>
+
+        <!-- Tarjeta Resumen por Quién Pagó -->
+        <div class="card" id="payer-summary-card" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0;">Quién Pagó</h2>
+                <small id="payer-filter-indicator" style="color:var(--primary-dark); font-weight:bold;"></small>
+            </div>
+            <div id="payer-summary-list"></div>
+        </div>
+
+        <div class="card">
+            <h2>Historial</h2>
+            <div id="tx-list">Cargando...</div>
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Historial</h2>
-        <div id="tx-list">Cargando...</div>
+    <!-- ============================================== -->
+    <!-- SECCIÓN 2: COMPARATIVA HISTÓRICA SEPARADA      -->
+    <!-- ============================================== -->
+    <div id="section-history" style="display: none;">
+        <!-- Tarjeta de Métricas Globales -->
+        <div class="card">
+            <h2>Métricas Globales</h2>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <div class="metric-title">Promedio / Mes</div>
+                    <div class="metric-value" id="hist-avg-display">$0</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Mes Récord</div>
+                    <div class="metric-value" id="hist-peak-display">-</div>
+                </div>
+            </div>
+            <div class="metric-box" style="margin-top: 8px;">
+                <div class="metric-title">Total Acumulado Registrado</div>
+                <div class="metric-value" id="hist-total-display">$0</div>
+            </div>
+        </div>
+
+        <!-- Gráfico Evolución Total Mensual -->
+        <div class="card">
+            <h2>Evolución del Gasto</h2>
+            <canvas id="chart-history-trend"></canvas>
+        </div>
+
+        <!-- Gráfico Comparativo de Pagadores a lo largo del tiempo -->
+        <div class="card">
+            <h2>Distribución por Pagador</h2>
+            <canvas id="chart-history-payers"></canvas>
+        </div>
+
+        <!-- Tabla Resumen Mes a Mes -->
+        <div class="card">
+            <h2>Detalle Mes a Mes</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Mes</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="text-align: right;">Fran</th>
+                        <th style="text-align: right;">Agus</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body">
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
 
 <script>
     const scriptURL = 'https://script.google.com/macros/s/AKfycbxF4F9w4HYhOAKaQcLsl2RFKwNvhi3F52x7a3LT9mxaLfhLIOf-1q9DTi-aG8RIvOkVRQ/exec'; 
     let expenses = [], charts = {};
     let editingId = null; 
-    let selectedCategoryFilter = null; // Filtro activo por categoría
-    let selectedPayerFilter = null;    // Filtro activo por quién pagó
+    let selectedCategoryFilter = null; 
+    let selectedPayerFilter = null;
+    let currentTab = 'monthly';
     const monthFilter = document.getElementById('month-filter');
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('date').valueAsDate = new Date();
-        loadData(); // Carga inicial
+        loadData();
     });
 
-    // Evento para el botón de actualizar manual
+    // Control de pestañas
+    function switchTab(tab) {
+        currentTab = tab;
+        const btnMonthly = document.getElementById('tab-btn-monthly');
+        const btnHistory = document.getElementById('tab-btn-history');
+        const secMonthly = document.getElementById('section-monthly');
+        const secHistory = document.getElementById('section-history');
+
+        if (tab === 'monthly') {
+            btnMonthly.classList.add('active');
+            btnHistory.classList.remove('active');
+            secMonthly.style.display = 'block';
+            secHistory.style.display = 'none';
+        } else {
+            btnHistory.classList.add('active');
+            btnMonthly.classList.remove('active');
+            secMonthly.style.display = 'none';
+            secHistory.style.display = 'block';
+            renderHistoricalComparison();
+        }
+    }
+
     document.getElementById('btn-refresh').addEventListener('click', loadData);
     monthFilter.addEventListener('change', () => {
-        selectedCategoryFilter = null; // Resetea filtros al cambiar de mes
+        selectedCategoryFilter = null; 
         selectedPayerFilter = null;
         updateUI();
     });
@@ -162,10 +315,7 @@
         fetch(scriptURL).then(res => res.json()).then(data => {
             expenses = data;
             
-            // Guardamos el mes que el usuario tenía seleccionado
             const currentSelected = monthFilter.value;
-            
-            // Limpiamos y reconstruimos las opciones del selector de meses
             monthFilter.innerHTML = '<option value="all">Ver todo el historial</option>';
             const months = [...new Set(expenses.map(tx => tx.date.substring(0, 7)))].sort().reverse();
             months.forEach(m => { 
@@ -185,6 +335,9 @@
             }
             
             updateUI();
+            if (currentTab === 'history') {
+                renderHistoricalComparison();
+            }
         }).catch(err => {
             list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con Google Sheets.</p>';
             console.error(err);
@@ -202,7 +355,6 @@
         const payer = document.getElementById('payer').value;
 
         if (editingId) {
-            // MODO EDICIÓN
             expenses = expenses.map(tx => tx.id.toString() === editingId.toString() ? { id: editingId, date, desc, category, account, amount, payer } : tx);
             updateUI();
             
@@ -215,7 +367,6 @@
             document.getElementById('form-title').innerText = "Nuevo Gasto";
             document.getElementById('submit-button').innerText = "Guardar Gasto";
         } else {
-            // MODO NUEVO GASTO
             const localId = Date.now().toString();
             const tx = { id: localId, date, desc, category, account, amount, payer };
             
@@ -259,12 +410,12 @@
         }
     }
 
+    // Actualiza la UI de la pestaña mensual
     function updateUI() {
         const list = document.getElementById('tx-list'), selected = monthFilter.value;
         list.innerHTML = '';
         let total = 0, byCat = {}, byPayer = {}, byMet = {};
         
-        // 1. Filtrar transacciones del período seleccionado
         const filteredByMonth = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
         
         if (filteredByMonth.length === 0) {
@@ -278,7 +429,6 @@
             document.getElementById('payer-summary-card').style.display = 'block';
         }
 
-        // 2. Agrupar gastos por categoría, pagador y cuenta
         filteredByMonth.forEach(tx => {
             const amt = parseFloat(tx.amount);
             total += amt;
@@ -289,7 +439,7 @@
 
         document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
 
-        // 3. Renderizar tarjeta de resumen por Categoría
+        // 1. Resumen por Categoría
         const catSummaryContainer = document.getElementById('category-summary-list');
         catSummaryContainer.innerHTML = '';
         const sortedCategories = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
@@ -320,7 +470,7 @@
             catSummaryContainer.appendChild(catRow);
         });
 
-        // 4. Renderizar tarjeta de resumen por Quién Pagó
+        // 2. Resumen por Quién Pagó
         const payerSummaryContainer = document.getElementById('payer-summary-list');
         payerSummaryContainer.innerHTML = '';
         const sortedPayers = Object.entries(byPayer).sort((a, b) => b[1] - a[1]);
@@ -351,7 +501,7 @@
             payerSummaryContainer.appendChild(payerRow);
         });
 
-        // Indicadores visuales de filtros aplicados
+        // Indicadores visuales de filtros
         const catIndicator = document.getElementById('cat-filter-indicator');
         if (selectedCategoryFilter) {
             catIndicator.innerText = `Filtrado: ${selectedCategoryFilter} ✖`;
@@ -370,14 +520,10 @@
             payerIndicator.innerText = '';
         }
 
-        // 5. Filtrar lista de historial según categoría y/o persona si hay filtros seleccionados
+        // 3. Filtrar y renderizar transacciones
         let finalFiltered = filteredByMonth;
-        if (selectedCategoryFilter) {
-            finalFiltered = finalFiltered.filter(tx => tx.category === selectedCategoryFilter);
-        }
-        if (selectedPayerFilter) {
-            finalFiltered = finalFiltered.filter(tx => tx.payer === selectedPayerFilter);
-        }
+        if (selectedCategoryFilter) finalFiltered = finalFiltered.filter(tx => tx.category === selectedCategoryFilter);
+        if (selectedPayerFilter) finalFiltered = finalFiltered.filter(tx => tx.payer === selectedPayerFilter);
 
         if (finalFiltered.length === 0) {
             list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">No hay gastos con los filtros aplicados.</p>';
@@ -401,12 +547,133 @@
             });
         }
 
-        // 6. Crear/Actualizar Gráficos
+        // 4. Gráficos circulares mensuales
         if(filteredByMonth.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
             createChart('chart-payer', 'Gastos por Persona', byPayer);
             createChart('chart-method', 'Gastos por Cuenta', byMet);
         }
+    }
+
+    // Renderiza la sección de Comparativa Histórica
+    function renderHistoricalComparison() {
+        if (!expenses || expenses.length === 0) return;
+
+        // Agrupación mensual
+        const monthlyData = {};
+        expenses.forEach(tx => {
+            const m = tx.date.substring(0, 7);
+            const amt = parseFloat(tx.amount) || 0;
+            if (!monthlyData[m]) {
+                monthlyData[m] = { total: 0, fran: 0, agus: 0, compartido: 0 };
+            }
+            monthlyData[m].total += amt;
+            const p = (tx.payer || '').toLowerCase();
+            if (p.includes('fran')) monthlyData[m].fran += amt;
+            else if (p.includes('agus')) monthlyData[m].agus += amt;
+            else monthlyData[m].compartido += amt;
+        });
+
+        // Orden cronológico (más antiguo al más nuevo para gráficos)
+        const sortedMonths = Object.keys(monthlyData).sort();
+        const totals = sortedMonths.map(m => Math.round(monthlyData[m].total));
+        const franTotals = sortedMonths.map(m => Math.round(monthlyData[m].fran));
+        const agusTotals = sortedMonths.map(m => Math.round(monthlyData[m].agus));
+        const sharedTotals = sortedMonths.map(m => Math.round(monthlyData[m].compartido));
+
+        // Métricas
+        const grandTotal = totals.reduce((acc, curr) => acc + curr, 0);
+        const avgMonthly = Math.round(grandTotal / (sortedMonths.length || 1));
+        
+        let maxMonth = '-', maxVal = 0;
+        sortedMonths.forEach(m => {
+            if (monthlyData[m].total > maxVal) {
+                maxVal = monthlyData[m].total;
+                maxMonth = m;
+            }
+        });
+
+        document.getElementById('hist-total-display').innerText = `$${grandTotal.toLocaleString()}`;
+        document.getElementById('hist-avg-display').innerText = `$${avgMonthly.toLocaleString()}`;
+        document.getElementById('hist-peak-display').innerText = `${maxMonth} ($${Math.round(maxVal).toLocaleString()})`;
+
+        // 1. Gráfico de Barras: Evolución del gasto total
+        if (charts['chart-history-trend']) charts['chart-history-trend'].destroy();
+        charts['chart-history-trend'] = new Chart(document.getElementById('chart-history-trend'), {
+            type: 'bar',
+            data: {
+                labels: sortedMonths,
+                datasets: [{
+                    label: 'Total Gastado',
+                    data: totals,
+                    backgroundColor: '#89c4f4',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` Total: $${ctx.raw.toLocaleString()}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            callback: (v) => `$${(v / 1000000).toFixed(1)}M`
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Gráfico de Barras Apiladas: Distribución por Pagador
+        if (charts['chart-history-payers']) charts['chart-history-payers'].destroy();
+        charts['chart-history-payers'] = new Chart(document.getElementById('chart-history-payers'), {
+            type: 'bar',
+            data: {
+                labels: sortedMonths,
+                datasets: [
+                    { label: 'Fran', data: franTotals, backgroundColor: '#63a4d6', borderRadius: 6 },
+                    { label: 'Agus', data: agusTotals, backgroundColor: '#ff9e9e', borderRadius: 6 },
+                    { label: 'Compartido', data: sharedTotals, backgroundColor: '#a3e4d7', borderRadius: 6 }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true },
+                    y: { 
+                        stacked: true,
+                        ticks: { callback: (v) => `$${(v / 1000000).toFixed(1)}M` }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
+                        }
+                    }
+                }
+            }
+        });
+
+        // 3. Llenar tabla mes a mes (orden inverso: más reciente primero)
+        const tableBody = document.getElementById('history-table-body');
+        tableBody.innerHTML = '';
+        [...sortedMonths].reverse().forEach(m => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="font-weight:700;">${m}</td>
+                <td style="text-align:right; font-weight:700; color:var(--text-main);">$${Math.round(monthlyData[m].total).toLocaleString()}</td>
+                <td style="text-align:right; color:var(--text-muted);">$${Math.round(monthlyData[m].fran).toLocaleString()}</td>
+                <td style="text-align:right; color:var(--text-muted);">$${Math.round(monthlyData[m].agus).toLocaleString()}</td>
+            `;
+            tableBody.appendChild(row);
+        });
     }
 
     function createChart(id, label, data) {
