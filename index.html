@@ -9,7 +9,7 @@
     <!-- Icono oficial para cuando lo agregás al inicio en el iPhone -->
     <link rel="apple-touch-icon" href="kodacoin.png">
 
-    <!-- Configuración para que se abra a pantalla completa como una App nativa -->
+    <!-- Configuración para pantalla completa como App nativa -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="KodaCoin">
@@ -28,6 +28,8 @@
             --text-main: #334e68; 
             --text-muted: #627d98; 
             --expense: #ff9e9e; 
+            --warning-bg: #fff9db;
+            --warning-border: #ffe066;
             --border-radius: 20px; 
         }
         
@@ -46,7 +48,7 @@
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
-        /* Selector de pestañas estilo iOS */
+        /* Pestañas estilo iOS */
         .tab-switcher {
             display: flex;
             background: #e1ecf4;
@@ -97,24 +99,50 @@
         .category-bar-bg { width: 100%; height: 8px; background-color: #e1ecf4; border-radius: 10px; overflow: hidden; }
         .category-bar-fill { height: 100%; background-color: var(--primary-dark); border-radius: 10px; transition: width 0.3s ease; }
 
-        /* Métricas de la comparativa histórica */
-        .metric-grid {
+        /* Estilo Inbox de Clasificación Rápida */
+        .inbox-card {
+            border: 2px solid var(--warning-border);
+            background: var(--warning-bg);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .inbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .inbox-item {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border: 1px solid #f1f3f5;
+        }
+        .inbox-select {
+            margin-top: 8px;
+            margin-bottom: 0;
+            padding: 8px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            background: #f8fafc;
+        }
+
+        /* Burn Rate y Proyecciones */
+        .burnrate-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px dashed #cde2f3;
         }
-        .metric-box {
-            background: #fafbfc;
-            border: 1px solid #e1ecf4;
-            padding: 14px;
-            border-radius: 16px;
-            text-align: center;
-        }
+        .burnrate-item { text-align: center; }
+        .burnrate-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .burnrate-val { font-size: 16px; font-weight: 800; color: var(--text-main); margin-top: 2px; }
+
+        /* Métricas históricas */
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
+        .metric-box { background: #fafbfc; border: 1px solid #e1ecf4; padding: 14px; border-radius: 16px; text-align: center; }
         .metric-title { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
         .metric-value { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
 
-        /* Tabla comparativa histórica */
         .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
         .history-table th { text-align: left; padding: 10px 8px; color: var(--text-muted); border-bottom: 2px solid #e1ecf4; font-weight: 700; }
         .history-table td { padding: 12px 8px; border-bottom: 1px solid #f0f4f8; }
@@ -140,6 +168,16 @@
     <!-- SECCIÓN 1: VISTA MENSUAL                       -->
     <!-- ============================================== -->
     <div id="section-monthly">
+        
+        <!-- INBOX DE CLASIFICACIÓN RÁPIDA (Solo visible si hay gastos 'Sin Categorizar') -->
+        <div id="inbox-container" class="inbox-card" style="display: none;">
+            <div class="inbox-header">
+                <span style="font-weight: 800; font-size: 14px; color: #856404;">📥 Inbox: Sin Categorizar</span>
+                <span id="inbox-badge" style="background: #e67700; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 800;">0</span>
+            </div>
+            <div id="inbox-list"></div>
+        </div>
+
         <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
             <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
             <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
@@ -148,6 +186,18 @@
         <div class="card summary-card">
             <div style="font-size: 12px; color:var(--text-muted); text-transform: uppercase;">Total del periodo</div>
             <div class="balance-amount" id="balance-display">$0</div>
+            
+            <!-- RITMO DE GASTO DIARIO & PROYECCIÓN -->
+            <div class="burnrate-grid" id="burnrate-section" style="display: none;">
+                <div class="burnrate-item">
+                    <div class="burnrate-label">Ritmo Diario</div>
+                    <div class="burnrate-val" id="daily-burn-display">$0</div>
+                </div>
+                <div class="burnrate-item">
+                    <div class="burnrate-label" id="projection-label">Proyección Cierre</div>
+                    <div class="burnrate-val" id="projection-display" style="color: var(--primary-dark);">$0</div>
+                </div>
+            </div>
         </div>
 
         <div class="card" id="form-card">
@@ -163,6 +213,7 @@
                     <option>Recreacion</option><option>Regalos</option><option>Tarjeta de Credito</option>
                     <option>Transporte</option><option>Vacaciones</option><option>Suscripciones</option>
                     <option>Gimnasio/Salud</option><option>Panaderia</option><option>Koda</option>
+                    <option>Sin Categorizar</option>
                 </select>
                 <select id="account" required>
                     <option value="" disabled selected>Seleccionar cuenta</option>
@@ -213,7 +264,6 @@
     <!-- SECCIÓN 2: COMPARATIVA HISTÓRICA               -->
     <!-- ============================================== -->
     <div id="section-history" style="display: none;">
-        <!-- Métricas Globales -->
         <div class="card">
             <h2>Métricas Globales</h2>
             <div class="metric-grid">
@@ -232,13 +282,11 @@
             </div>
         </div>
 
-        <!-- Gráfico Evolución Total Mensual -->
         <div class="card">
             <h2>Evolución del Gasto</h2>
             <canvas id="chart-history-trend"></canvas>
         </div>
 
-        <!-- Análisis Histórico por Categoría -->
         <div class="card">
             <h2>Top Categorías Históricas</h2>
             <canvas id="chart-history-categories"></canvas>
@@ -248,13 +296,11 @@
             </div>
         </div>
 
-        <!-- Distribución por Pagador Histórico -->
         <div class="card">
             <h2>Distribución por Pagador</h2>
             <canvas id="chart-history-payers"></canvas>
         </div>
 
-        <!-- Tabla Resumen Mes a Mes -->
         <div class="card">
             <h2>Detalle Mes a Mes</h2>
             <table class="history-table">
@@ -282,6 +328,13 @@
     let selectedPayerFilter = null;
     let currentTab = 'monthly';
     const monthFilter = document.getElementById('month-filter');
+
+    const CATEGORIES = [
+        "Verdulería/Carniceria", "Almuerzo oficina", "Casa", "Auto", "Super", 
+        "Delivery", "Farmacia", "Gastos varios", "Comer afuera", "Servicios", 
+        "Recreacion", "Regalos", "Tarjeta de Credito", "Transporte", "Vacaciones", 
+        "Suscripciones", "Gimnasio/Salud", "Panaderia", "Koda"
+    ];
 
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('date').valueAsDate = new Date();
@@ -350,6 +403,30 @@
             list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con Google Sheets.</p>';
             console.error(err);
         });
+    }
+
+    // Clasificación Rápida de Gastos desde el Inbox
+    function quickCategorize(id, newCat) {
+        if (!newCat) return;
+        const tx = expenses.find(e => e.id.toString() === id.toString());
+        if (tx) {
+            tx.category = newCat;
+            updateUI();
+            
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                    action: 'edit', 
+                    id: tx.id, 
+                    date: tx.date, 
+                    desc: tx.desc, 
+                    category: newCat, 
+                    account: tx.account, 
+                    amount: tx.amount, 
+                    payer: tx.payer 
+                })
+            });
+        }
     }
 
     document.getElementById('tx-form').addEventListener('submit', function(e) {
@@ -423,6 +500,46 @@
         list.innerHTML = '';
         let total = 0, byCat = {}, byPayer = {}, byMet = {};
         
+        // --- 1. RENDERIZADO DEL INBOX "SIN CATEGORIZAR" ---
+        const uncategorized = expenses.filter(tx => (tx.category || '').trim().toLowerCase() === 'sin categorizar');
+        const inboxContainer = document.getElementById('inbox-container');
+        const inboxList = document.getElementById('inbox-list');
+        const inboxBadge = document.getElementById('inbox-badge');
+
+        if (uncategorized.length > 0) {
+            inboxContainer.style.display = 'block';
+            inboxBadge.innerText = uncategorized.length;
+            inboxList.innerHTML = '';
+
+            uncategorized.forEach(tx => {
+                const shortDate = tx.date.split('T')[0];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'inbox-item';
+                
+                let selectOptions = `<option value="" disabled selected>👉 Seleccionar categoría...</option>`;
+                CATEGORIES.forEach(c => { selectOptions += `<option value="${c}">${c}</option>`; });
+
+                itemDiv.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <b>${tx.desc}</b><br>
+                            <small style="color:var(--text-muted);">${shortDate} • ${tx.payer} • ${tx.account}</small>
+                        </div>
+                        <div style="font-weight:800; color:var(--expense);">
+                            -$${Math.round(parseFloat(tx.amount)).toLocaleString()}
+                        </div>
+                    </div>
+                    <select class="inbox-select" onchange="quickCategorize('${tx.id}', this.value)">
+                        ${selectOptions}
+                    </select>
+                `;
+                inboxList.appendChild(itemDiv);
+            });
+        } else {
+            inboxContainer.style.display = 'none';
+        }
+
+        // --- 2. FILTRAR POR MES ---
         const filteredByMonth = expenses.filter(tx => selected === 'all' || tx.date.substring(0, 7) === selected);
         
         if (filteredByMonth.length === 0) {
@@ -430,6 +547,7 @@
             document.getElementById('analysis-section').style.display = 'none';
             document.getElementById('category-summary-card').style.display = 'none';
             document.getElementById('payer-summary-card').style.display = 'none';
+            document.getElementById('burnrate-section').style.display = 'none';
         } else {
             document.getElementById('analysis-section').style.display = 'block';
             document.getElementById('category-summary-card').style.display = 'block';
@@ -446,7 +564,34 @@
 
         document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
 
-        // Resumen por Categoría del Mes
+        // --- 3. RITMO DIARIO & PROYECCIÓN ---
+        const burnRateSec = document.getElementById('burnrate-section');
+        if (selected === 'all' || filteredByMonth.length === 0) {
+            burnRateSec.style.display = 'none';
+        } else {
+            burnRateSec.style.display = 'grid';
+            const [selYear, selMonth] = selected.split('-').map(Number);
+            const totalDaysInMonth = new Date(selYear, selMonth, 0).getDate();
+            const now = new Date();
+            const isCurrentMonth = (now.getFullYear() === selYear && (now.getMonth() + 1) === selMonth);
+
+            if (isCurrentMonth) {
+                const currentDay = Math.max(1, now.getDate());
+                const dailyBurn = total / currentDay;
+                const projectedTotal = dailyBurn * totalDaysInMonth;
+
+                document.getElementById('daily-burn-display').innerText = `$${Math.round(dailyBurn).toLocaleString()}/d`;
+                document.getElementById('projection-label').innerText = `Proyección Cierre (${currentDay}/${totalDaysInMonth})`;
+                document.getElementById('projection-display').innerText = `$${Math.round(projectedTotal).toLocaleString()}`;
+            } else {
+                const dailyBurn = total / totalDaysInMonth;
+                document.getElementById('daily-burn-display').innerText = `$${Math.round(dailyBurn).toLocaleString()}/d`;
+                document.getElementById('projection-label').innerText = `Mes Cerrado (${totalDaysInMonth} días)`;
+                document.getElementById('projection-display').innerText = `$${Math.round(total).toLocaleString()}`;
+            }
+        }
+
+        // --- 4. RESUMEN POR CATEGORÍA ---
         const catSummaryContainer = document.getElementById('category-summary-list');
         catSummaryContainer.innerHTML = '';
         const sortedCategories = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
@@ -477,7 +622,7 @@
             catSummaryContainer.appendChild(catRow);
         });
 
-        // Resumen por Quién Pagó del Mes
+        // --- 5. RESUMEN POR QUIÉN PAGÓ ---
         const payerSummaryContainer = document.getElementById('payer-summary-list');
         payerSummaryContainer.innerHTML = '';
         const sortedPayers = Object.entries(byPayer).sort((a, b) => b[1] - a[1]);
@@ -508,7 +653,7 @@
             payerSummaryContainer.appendChild(payerRow);
         });
 
-        // Indicadores visuales
+        // Indicadores visuales de filtros
         const catIndicator = document.getElementById('cat-filter-indicator');
         if (selectedCategoryFilter) {
             catIndicator.innerText = `Filtrado: ${selectedCategoryFilter} ✖`;
@@ -527,7 +672,7 @@
             payerIndicator.innerText = '';
         }
 
-        // Transacciones filtradas
+        // --- 6. HISTORIAL DE GASTOS ---
         let finalFiltered = filteredByMonth;
         if (selectedCategoryFilter) finalFiltered = finalFiltered.filter(tx => tx.category === selectedCategoryFilter);
         if (selectedPayerFilter) finalFiltered = finalFiltered.filter(tx => tx.payer === selectedPayerFilter);
@@ -554,7 +699,7 @@
             });
         }
 
-        // Gráficos mensuales
+        // Gráficos circulares
         if(filteredByMonth.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
             createChart('chart-payer', 'Gastos por Persona', byPayer);
@@ -562,6 +707,7 @@
         }
     }
 
+    // --- 7. RENDERIZADO COMPARATIVA HISTÓRICA ---
     function renderHistoricalComparison() {
         if (!expenses || expenses.length === 0) return;
 
@@ -571,9 +717,8 @@
         expenses.forEach(tx => {
             const m = tx.date.substring(0, 7);
             const amt = parseFloat(tx.amount) || 0;
-            const cat = tx.category || 'Otros';
+            const cat = tx.category || 'Sin Categorizar';
 
-            // Agrupación mensual
             if (!monthlyData[m]) {
                 monthlyData[m] = { total: 0, fran: 0, agus: 0, compartido: 0 };
             }
@@ -583,7 +728,6 @@
             else if (p.includes('agus')) monthlyData[m].agus += amt;
             else monthlyData[m].compartido += amt;
 
-            // Agrupación histórica por categoría
             catTotals[cat] = (catTotals[cat] || 0) + amt;
         });
 
@@ -609,7 +753,7 @@
         document.getElementById('hist-avg-display').innerText = `$${avgMonthly.toLocaleString()}`;
         document.getElementById('hist-peak-display').innerText = `${maxMonth} ($${Math.round(maxVal).toLocaleString()})`;
 
-        // 1. Gráfico Evolución Total Mensual
+        // Gráfico Evolución Total
         if (charts['chart-history-trend']) charts['chart-history-trend'].destroy();
         charts['chart-history-trend'] = new Chart(document.getElementById('chart-history-trend'), {
             type: 'bar',
@@ -634,9 +778,9 @@
             }
         });
 
-        // 2. Gráfico y Listado de Categorías Históricas
+        // Gráfico y Lista de Categorías Históricas
         const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
-        const topCats = sortedCats.slice(0, 8); // Top 8 para el gráfico
+        const topCats = sortedCats.slice(0, 8);
 
         if (charts['chart-history-categories']) charts['chart-history-categories'].destroy();
         charts['chart-history-categories'] = new Chart(document.getElementById('chart-history-categories'), {
@@ -663,7 +807,6 @@
             }
         });
 
-        // Renderizado del listado completo de categorías históricas
         const histCatList = document.getElementById('history-category-list');
         histCatList.innerHTML = '';
         sortedCats.forEach(([catName, catTotal]) => {
@@ -688,7 +831,7 @@
             histCatList.appendChild(row);
         });
 
-        // 3. Gráfico Distribución por Pagador
+        // Gráfico Pagadores
         if (charts['chart-history-payers']) charts['chart-history-payers'].destroy();
         charts['chart-history-payers'] = new Chart(document.getElementById('chart-history-payers'), {
             type: 'bar',
@@ -717,7 +860,7 @@
             }
         });
 
-        // 4. Tabla mes a mes
+        // Tabla Histórica
         const tableBody = document.getElementById('history-table-body');
         tableBody.innerHTML = '';
         [...sortedMonths].reverse().forEach(m => {
