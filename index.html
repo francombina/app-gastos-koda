@@ -90,7 +90,7 @@
         .btn-refresh { background: #fafbfc; border: 2px solid #e1ecf4; border-radius: 20px; padding: 0; cursor: pointer; width: 50px; height: 50px; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.2s; box-sizing: border-box; }
         .btn-refresh:active { transform: scale(0.90); }
 
-        /* Barras de porcentaje para categorías y pagadores */
+        /* Barras de porcentaje */
         .category-item { display: flex; flex-direction: column; padding: 12px; background: #fafbfc; border-radius: 16px; margin-bottom: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid #e1ecf4; }
         .category-item:active { background: #e8f3fc; }
         .category-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
@@ -137,10 +137,9 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- SECCIÓN 1: VISTA MENSUAL (INICIO HABITUAL)     -->
+    <!-- SECCIÓN 1: VISTA MENSUAL                       -->
     <!-- ============================================== -->
     <div id="section-monthly">
-        <!-- Filtro y Botón Actualizar -->
         <div class="card" style="display: flex; gap: 10px; align-items: center; padding: 15px 20px;">
             <select id="month-filter" style="margin-bottom: 0; flex: 1;"><option value="all">Ver todo el historial</option></select>
             <button class="btn-refresh" id="btn-refresh" title="Actualizar datos">🔄</button>
@@ -211,10 +210,10 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- SECCIÓN 2: COMPARATIVA HISTÓRICA SEPARADA      -->
+    <!-- SECCIÓN 2: COMPARATIVA HISTÓRICA               -->
     <!-- ============================================== -->
     <div id="section-history" style="display: none;">
-        <!-- Tarjeta de Métricas Globales -->
+        <!-- Métricas Globales -->
         <div class="card">
             <h2>Métricas Globales</h2>
             <div class="metric-grid">
@@ -239,7 +238,17 @@
             <canvas id="chart-history-trend"></canvas>
         </div>
 
-        <!-- Gráfico Comparativo de Pagadores a lo largo del tiempo -->
+        <!-- Análisis Histórico por Categoría -->
+        <div class="card">
+            <h2>Top Categorías Históricas</h2>
+            <canvas id="chart-history-categories"></canvas>
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 15px; color: var(--text-muted); margin-bottom: 10px;">Desglose y Promedio Mensual</h3>
+                <div id="history-category-list"></div>
+            </div>
+        </div>
+
+        <!-- Distribución por Pagador Histórico -->
         <div class="card">
             <h2>Distribución por Pagador</h2>
             <canvas id="chart-history-payers"></canvas>
@@ -279,7 +288,6 @@
         loadData();
     });
 
-    // Control de pestañas
     function switchTab(tab) {
         currentTab = tab;
         const btnMonthly = document.getElementById('tab-btn-monthly');
@@ -410,7 +418,6 @@
         }
     }
 
-    // Actualiza la UI de la pestaña mensual
     function updateUI() {
         const list = document.getElementById('tx-list'), selected = monthFilter.value;
         list.innerHTML = '';
@@ -439,7 +446,7 @@
 
         document.getElementById('balance-display').innerText = `$${Math.round(total).toLocaleString()}`;
 
-        // 1. Resumen por Categoría
+        // Resumen por Categoría del Mes
         const catSummaryContainer = document.getElementById('category-summary-list');
         catSummaryContainer.innerHTML = '';
         const sortedCategories = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
@@ -470,7 +477,7 @@
             catSummaryContainer.appendChild(catRow);
         });
 
-        // 2. Resumen por Quién Pagó
+        // Resumen por Quién Pagó del Mes
         const payerSummaryContainer = document.getElementById('payer-summary-list');
         payerSummaryContainer.innerHTML = '';
         const sortedPayers = Object.entries(byPayer).sort((a, b) => b[1] - a[1]);
@@ -501,7 +508,7 @@
             payerSummaryContainer.appendChild(payerRow);
         });
 
-        // Indicadores visuales de filtros
+        // Indicadores visuales
         const catIndicator = document.getElementById('cat-filter-indicator');
         if (selectedCategoryFilter) {
             catIndicator.innerText = `Filtrado: ${selectedCategoryFilter} ✖`;
@@ -520,7 +527,7 @@
             payerIndicator.innerText = '';
         }
 
-        // 3. Filtrar y renderizar transacciones
+        // Transacciones filtradas
         let finalFiltered = filteredByMonth;
         if (selectedCategoryFilter) finalFiltered = finalFiltered.filter(tx => tx.category === selectedCategoryFilter);
         if (selectedPayerFilter) finalFiltered = finalFiltered.filter(tx => tx.payer === selectedPayerFilter);
@@ -547,7 +554,7 @@
             });
         }
 
-        // 4. Gráficos circulares mensuales
+        // Gráficos mensuales
         if(filteredByMonth.length > 0) {
             createChart('chart-category', 'Gastos por Categoría', byCat);
             createChart('chart-payer', 'Gastos por Persona', byPayer);
@@ -555,15 +562,18 @@
         }
     }
 
-    // Renderiza la sección de Comparativa Histórica
     function renderHistoricalComparison() {
         if (!expenses || expenses.length === 0) return;
 
-        // Agrupación mensual
         const monthlyData = {};
+        const catTotals = {};
+
         expenses.forEach(tx => {
             const m = tx.date.substring(0, 7);
             const amt = parseFloat(tx.amount) || 0;
+            const cat = tx.category || 'Otros';
+
+            // Agrupación mensual
             if (!monthlyData[m]) {
                 monthlyData[m] = { total: 0, fran: 0, agus: 0, compartido: 0 };
             }
@@ -572,18 +582,20 @@
             if (p.includes('fran')) monthlyData[m].fran += amt;
             else if (p.includes('agus')) monthlyData[m].agus += amt;
             else monthlyData[m].compartido += amt;
+
+            // Agrupación histórica por categoría
+            catTotals[cat] = (catTotals[cat] || 0) + amt;
         });
 
-        // Orden cronológico (más antiguo al más nuevo para gráficos)
         const sortedMonths = Object.keys(monthlyData).sort();
         const totals = sortedMonths.map(m => Math.round(monthlyData[m].total));
         const franTotals = sortedMonths.map(m => Math.round(monthlyData[m].fran));
         const agusTotals = sortedMonths.map(m => Math.round(monthlyData[m].agus));
         const sharedTotals = sortedMonths.map(m => Math.round(monthlyData[m].compartido));
 
-        // Métricas
         const grandTotal = totals.reduce((acc, curr) => acc + curr, 0);
-        const avgMonthly = Math.round(grandTotal / (sortedMonths.length || 1));
+        const numMonths = sortedMonths.length || 1;
+        const avgMonthly = Math.round(grandTotal / numMonths);
         
         let maxMonth = '-', maxVal = 0;
         sortedMonths.forEach(m => {
@@ -597,7 +609,7 @@
         document.getElementById('hist-avg-display').innerText = `$${avgMonthly.toLocaleString()}`;
         document.getElementById('hist-peak-display').innerText = `${maxMonth} ($${Math.round(maxVal).toLocaleString()})`;
 
-        // 1. Gráfico de Barras: Evolución del gasto total
+        // 1. Gráfico Evolución Total Mensual
         if (charts['chart-history-trend']) charts['chart-history-trend'].destroy();
         charts['chart-history-trend'] = new Chart(document.getElementById('chart-history-trend'), {
             type: 'bar',
@@ -614,23 +626,69 @@
                 responsive: true,
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => ` Total: $${ctx.raw.toLocaleString()}`
-                        }
-                    }
+                    tooltip: { callbacks: { label: (ctx) => ` Total: $${ctx.raw.toLocaleString()}` } }
                 },
                 scales: {
-                    y: {
-                        ticks: {
-                            callback: (v) => `$${(v / 1000000).toFixed(1)}M`
-                        }
-                    }
+                    y: { ticks: { callback: (v) => `$${(v / 1000000).toFixed(1)}M` } }
                 }
             }
         });
 
-        // 2. Gráfico de Barras Apiladas: Distribución por Pagador
+        // 2. Gráfico y Listado de Categorías Históricas
+        const sortedCats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+        const topCats = sortedCats.slice(0, 8); // Top 8 para el gráfico
+
+        if (charts['chart-history-categories']) charts['chart-history-categories'].destroy();
+        charts['chart-history-categories'] = new Chart(document.getElementById('chart-history-categories'), {
+            type: 'bar',
+            data: {
+                labels: topCats.map(c => c[0]),
+                datasets: [{
+                    label: 'Total Acumulado',
+                    data: topCats.map(c => Math.round(c[1])),
+                    backgroundColor: '#63a4d6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => ` Total: $${ctx.raw.toLocaleString()}` } }
+                },
+                scales: {
+                    x: { ticks: { callback: (v) => `$${(v / 1000000).toFixed(1)}M` } }
+                }
+            }
+        });
+
+        // Renderizado del listado completo de categorías históricas
+        const histCatList = document.getElementById('history-category-list');
+        histCatList.innerHTML = '';
+        sortedCats.forEach(([catName, catTotal]) => {
+            const percentage = grandTotal > 0 ? ((catTotal / grandTotal) * 100).toFixed(1) : 0;
+            const avgPerMonth = Math.round(catTotal / numMonths);
+
+            const row = document.createElement('div');
+            row.className = 'category-item';
+            row.style.cursor = 'default';
+            row.innerHTML = `
+                <div class="category-header">
+                    <span>${catName} <small style="color:var(--text-muted); font-weight:normal;">(${percentage}%)</small></span>
+                    <span style="color:var(--text-main);">$${Math.round(catTotal).toLocaleString()}</span>
+                </div>
+                <div class="category-bar-bg" style="margin-bottom: 6px;">
+                    <div class="category-bar-fill" style="width: ${percentage}%;"></div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); text-align: right;">
+                    Promedio mensual: <b style="color: var(--primary-dark);">$${avgPerMonth.toLocaleString()}</b>
+                </div>
+            `;
+            histCatList.appendChild(row);
+        });
+
+        // 3. Gráfico Distribución por Pagador
         if (charts['chart-history-payers']) charts['chart-history-payers'].destroy();
         charts['chart-history-payers'] = new Chart(document.getElementById('chart-history-payers'), {
             type: 'bar',
@@ -653,15 +711,13 @@
                 },
                 plugins: {
                     tooltip: {
-                        callbacks: {
-                            label: (ctx) => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString()}`
-                        }
+                        callbacks: { label: (ctx) => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` }
                     }
                 }
             }
         });
 
-        // 3. Llenar tabla mes a mes (orden inverso: más reciente primero)
+        // 4. Tabla mes a mes
         const tableBody = document.getElementById('history-table-body');
         tableBody.innerHTML = '';
         [...sortedMonths].reverse().forEach(m => {
