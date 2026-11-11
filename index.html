@@ -188,6 +188,15 @@
         }
         .btn-budget-toggle:active { transform: scale(0.95); }
 
+        .sync-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
         /* Métricas históricas */
         .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px; }
         .metric-box { background: #fafbfc; border: 1px solid #e1ecf4; padding: 14px; border-radius: 16px; text-align: center; }
@@ -313,11 +322,18 @@
     <!-- ============================================== -->
     <div id="section-budget" style="display: none;">
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                 <h2 style="margin:0;">Presupuesto Mensual</h2>
-                <button class="btn-budget-toggle" id="btn-toggle-config" onclick="toggleBudgetConfig()">⚙️ Ajustar Presupuesto</button>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn-budget-toggle" onclick="reloadBudgetsOnly()" title="Sincronizar con Sheet">🔄</button>
+                    <button class="btn-budget-toggle" id="btn-toggle-config" onclick="toggleBudgetConfig()">⚙️ Ajustar</button>
+                </div>
             </div>
             
+            <div id="budget-sync-status" class="sync-badge" style="background:#e8f3fc; color:var(--primary-dark);">
+                ⏳ Sincronizando con Google Sheets...
+            </div>
+
             <p id="budget-month-label" style="margin: 0 0 12px 0; font-size: 13px; color: var(--text-muted); font-weight: 600;"></p>
 
             <div class="metric-grid">
@@ -346,7 +362,7 @@
         <div class="card budget-editor-card" id="budget-config-panel" style="display:none;">
             <h3 style="margin-bottom: 4px; font-size: 16px;">Ajuste de Presupuesto y Porcentajes</h3>
             <p style="font-size: 12px; color: var(--text-muted); margin-top: 0; margin-bottom: 14px;">
-                Modificá el <b>Total</b>, el <b>Monto ($)</b> o el <b>Porcentaje (%)</b>. Se recalculan entre sí y se guardan en la hoja <b>Presupuestos</b>.
+                Modificá el <b>Total</b>, el <b>Monto ($)</b> o el <b>Porcentaje (%)</b>. Se recalculan entre sí y se graban en la pestaña <b>Presupuestos</b>.
             </p>
             
             <!-- Input Total General -->
@@ -426,11 +442,6 @@
         </div>
 
         <div class="card">
-            <h2>Distribución por Pagador</h2>
-            <canvas id="chart-history-payers"></canvas>
-        </div>
-
-        <div class="card">
             <h2>Detalle Mes a Mes</h2>
             <table class="history-table">
                 <thead>
@@ -467,34 +478,31 @@
         "Suscripciones", "Gimnasio/Salud", "Panaderia", "Koda"
     ];
 
-    // Estructura inicial idéntica a tu pestaña 'Presupuestos'
+    // Valores de respaldo iniciales iguales a tu hoja 'Presupuestos' ($3.000.000)
     let budgetItemsList = [
-        { category: "Panaderia", amount: 40000, percentage: 1.31 },
-        { category: "Farmacia", amount: 50000, percentage: 1.64 },
-        { category: "Recreacion", amount: 60000, percentage: 1.96 },
-        { category: "Koda", amount: 65000, percentage: 2.13 },
-        { category: "Gastos varios", amount: 70000, percentage: 2.29 },
-        { category: "Delivery", amount: 80000, percentage: 2.62 },
-        { category: "Comer afuera", amount: 100000, percentage: 3.27 },
-        { category: "Verdulería/Carniceria", amount: 120000, percentage: 3.93 },
-        { category: "Servicios", amount: 320000, percentage: 10.47 },
-        { category: "Auto", amount: 350000, percentage: 11.46 },
-        { category: "Super", amount: 450000, percentage: 14.73 },
-        { category: "Casa", amount: 1350000, percentage: 44.19 }
+        { category: "Panaderia", amount: 60000, percentage: 2.00 },
+        { category: "Farmacia", amount: 60000, percentage: 2.00 },
+        { category: "Recreacion", amount: 60000, percentage: 2.00 },
+        { category: "Koda", amount: 90000, percentage: 3.00 },
+        { category: "Gastos varios", amount: 90000, percentage: 3.00 },
+        { category: "Delivery", amount: 90000, percentage: 3.00 },
+        { category: "Comer afuera", amount: 90000, percentage: 3.00 },
+        { category: "Verdulería/Carniceria", amount: 90000, percentage: 3.00 },
+        { category: "Servicios", amount: 300000, percentage: 10.00 },
+        { category: "Auto", amount: 300000, percentage: 10.00 },
+        { category: "Super", amount: 420000, percentage: 14.00 },
+        { category: "Casa", amount: 1350000, percentage: 45.00 }
     ];
 
-    let budgetTotalSum = 3055000;
+    let budgetTotalSum = 3000000;
 
-    // Helpers de normalización en el cliente para garantizar que ningún dato quede afuera
     function normalizeDateClient(val) {
         if (!val) return '';
         const str = String(val).trim();
-        // Si viene dd/MM/yyyy
         const mDMY = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
         if (mDMY) {
             return `${mDMY[3]}-${mDMY[2].padStart(2, '0')}-${mDMY[1].padStart(2, '0')}`;
         }
-        // Si viene yyyy-MM-dd o ISO
         const mYMD = str.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
         if (mYMD) {
             return `${mYMD[1]}-${mYMD[2].padStart(2, '0')}-${mYMD[3].padStart(2, '0')}`;
@@ -531,17 +539,9 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        localStorage.removeItem('kodacoin_user_budgets');
+        localStorage.removeItem('kodacoin_budget_items_v2');
         document.getElementById('date').valueAsDate = new Date();
-        const cached = localStorage.getItem('kodacoin_budget_items_v2');
-        if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                if (parsed.items && parsed.items.length > 0) {
-                    budgetItemsList = parsed.items;
-                    budgetTotalSum = parsed.total || budgetItemsList.reduce((a, b) => a + b.amount, 0);
-                }
-            } catch (e) {}
-        }
         loadData();
     });
 
@@ -575,49 +575,78 @@
 
     searchInput.addEventListener('input', renderTransactionList);
 
+    function applyBudgetDataFromServer(data) {
+        const syncBadge = document.getElementById('budget-sync-status');
+
+        if (!Array.isArray(data) && data.budgetItems && data.budgetItems.length > 0) {
+            budgetItemsList = data.budgetItems.map(item => {
+                const amt = parseAmountClient(item.amount);
+                let pct = parseFloat(item.percentage) || 0;
+                if (pct > 0 && pct <= 1) pct = pct * 100;
+                return {
+                    category: normalizeCategoryClient(item.category),
+                    amount: amt,
+                    percentage: pct
+                };
+            });
+            budgetTotalSum = parseAmountClient(data.budgetTotal) || budgetItemsList.reduce((acc, c) => acc + c.amount, 0);
+            budgetItemsList.forEach(item => {
+                if (!item.percentage && budgetTotalSum > 0) {
+                    item.percentage = (item.amount / budgetTotalSum) * 100;
+                }
+            });
+
+            if (syncBadge) {
+                syncBadge.style.background = '#ebfbee';
+                syncBadge.style.color = '#2b8a3e';
+                syncBadge.innerText = '☁️ Sincronizado con hoja "Presupuestos"';
+            }
+        } else if (Array.isArray(data)) {
+            if (syncBadge) {
+                syncBadge.style.background = '#fff3bf';
+                syncBadge.style.color = '#e67700';
+                syncBadge.innerText = '⚠️ El script de Google aún está en versión vieja (Implementar -> Nueva versión)';
+            }
+        }
+    }
+
+    function reloadBudgetsOnly() {
+        const syncBadge = document.getElementById('budget-sync-status');
+        if (syncBadge) {
+            syncBadge.style.background = '#e8f3fc';
+            syncBadge.style.color = 'var(--primary-dark)';
+            syncBadge.innerText = '⏳ Leyendo hoja "Presupuestos"...';
+        }
+        fetch(scriptURL + '?nosync=1&t=' + Date.now())
+            .then(res => res.json())
+            .then(data => {
+                applyBudgetDataFromServer(data);
+                renderBudgetSection();
+                if (document.getElementById('budget-config-panel').style.display !== 'none') {
+                    renderBudgetEditorRows();
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
     function loadData() {
         const list = document.getElementById('tx-list');
         list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Cargando y sincronizando datos...</p>';
         
-        fetch(scriptURL).then(res => res.json()).then(data => {
+        fetch(scriptURL + '?t=' + Date.now()).then(res => res.json()).then(data => {
             const rawExpenses = Array.isArray(data) ? data : (data.expenses || []);
             
-            // Limpiamos y normalizamos cada fila para no perder ningún movimiento
             expenses = rawExpenses.map((tx, idx) => ({
                 id: tx.id ? String(tx.id) : `local-${idx}`,
                 date: normalizeDateClient(tx.date),
                 desc: tx.desc ? String(tx.desc).trim() : 'Sin concepto',
                 category: normalizeCategoryClient(tx.category),
                 payer: tx.payer ? String(tx.payer).trim() : 'Compartido',
-                account: tx.account ? String(tx.account).trim() : 'MercadoPago',
+                account: tx.account ? String(tx.account).trim() : 'Mercado Pago',
                 amount: parseAmountClient(tx.amount)
             })).filter(tx => tx.date && tx.amount > 0);
 
-            // Si vienen presupuestos desde la pestaña 'Presupuestos' del Sheet
-            if (!Array.isArray(data) && data.budgetItems && data.budgetItems.length > 0) {
-                budgetItemsList = data.budgetItems.map(item => {
-                    const amt = parseAmountClient(item.amount);
-                    let pct = parseFloat(item.percentage) || 0;
-                    // En Sheets un 14.73% se guarda como 0.1473; lo pasamos a escala 0-100
-                    if (pct > 0 && pct <= 1) pct = pct * 100;
-                    return {
-                        category: normalizeCategoryClient(item.category),
-                        amount: amt,
-                        percentage: pct
-                    };
-                });
-                budgetTotalSum = parseAmountClient(data.budgetTotal) || budgetItemsList.reduce((acc, c) => acc + c.amount, 0);
-                // Recalcular porcentajes si alguno vino en 0
-                budgetItemsList.forEach(item => {
-                    if (!item.percentage && budgetTotalSum > 0) {
-                        item.percentage = (item.amount / budgetTotalSum) * 100;
-                    }
-                });
-                localStorage.setItem('kodacoin_budget_items_v2', JSON.stringify({
-                    total: budgetTotalSum,
-                    items: budgetItemsList
-                }));
-            }
+            applyBudgetDataFromServer(data);
             
             const currentSelected = monthFilter.value;
             monthFilter.innerHTML = '<option value="all">Ver todo el historial</option>';
@@ -948,10 +977,10 @@
         if (panel.style.display === 'none') {
             renderBudgetEditorRows();
             panel.style.display = 'block';
-            btn.innerText = 'Cerrar Ajuste';
+            btn.innerText = 'Cerrar';
         } else {
             panel.style.display = 'none';
-            btn.innerText = '⚙️ Ajustar Presupuesto';
+            btn.innerText = '⚙️ Ajustar';
         }
     }
 
@@ -971,7 +1000,6 @@
             container.appendChild(row);
         });
 
-        // Selector para agregar categorías que todavía no estén en la lista de Presupuestos
         const addSelect = document.getElementById('add-budget-cat-select');
         const existingCats = new Set(budgetItemsList.map(i => i.category));
         const availableCats = ALL_CATEGORIES.filter(c => !existingCats.has(c));
@@ -991,7 +1019,6 @@
         renderBudgetEditorRows();
     }
 
-    // 1. Modificar el TOTAL general -> recalcula los Montos ($) manteniendo los Porcentajes (%)
     function onEditorTotalChange(newTotalVal) {
         const newTotal = parseFloat(newTotalVal) || 0;
         if (newTotal <= 0) return;
@@ -1006,7 +1033,6 @@
         updateEditorControlDisplay();
     }
 
-    // 2. Modificar un MONTO de categoría -> recalcula el Total y todos los Porcentajes (%)
     function onRowAmountChange(index, newAmtVal) {
         const newAmt = parseFloat(newAmtVal) || 0;
         budgetItemsList[index].amount = newAmt;
@@ -1023,7 +1049,6 @@
         updateEditorControlDisplay();
     }
 
-    // 3. Modificar un PORCENTAJE de categoría -> recalcula el Monto ($) de esa categoría sobre el Total
     function onRowPercentageChange(index, newPctVal) {
         const newPct = parseFloat(newPctVal) || 0;
         budgetItemsList[index].percentage = newPct;
@@ -1069,23 +1094,17 @@
         btn.innerText = 'Guardando en Sheets...';
         btn.disabled = true;
 
-        // Recalcula el total real según la suma de montos antes de enviar a Sheets
         budgetTotalSum = budgetItemsList.reduce((acc, c) => acc + c.amount, 0);
         budgetItemsList.forEach(item => {
             item.percentage = budgetTotalSum > 0 ? (item.amount / budgetTotalSum) * 100 : 0;
         });
-
-        localStorage.setItem('kodacoin_budget_items_v2', JSON.stringify({
-            total: budgetTotalSum,
-            items: budgetItemsList
-        }));
 
         const payload = {
             action: 'saveBudgets',
             total: budgetTotalSum,
             items: budgetItemsList.map(item => ({
                 category: item.category,
-                amount: item.amount,
+                amount: Math.round(item.amount),
                 percentage: (item.percentage / 100)
             }))
         };
@@ -1097,13 +1116,11 @@
             btn.innerText = 'Guardar en Sheets ☁️';
             btn.disabled = false;
             toggleBudgetConfig();
-            renderBudgetSection();
+            reloadBudgetsOnly();
         }).catch(err => {
-            alert('Se guardó localmente, pero hubo un problema al conectar con Google Sheets.');
+            alert('Error al conectar con Google Sheets.');
             btn.innerText = 'Guardar en Sheets ☁️';
             btn.disabled = false;
-            toggleBudgetConfig();
-            renderBudgetSection();
         });
     }
 
@@ -1130,7 +1147,6 @@
         const totalTarget = budgetTotalSum;
         const budgetedCatsSet = new Set();
 
-        // Ordenar categorías presupuestadas de mayor a menor monto objetivo
         const sortedBudgetItems = [...budgetItemsList].sort((a, b) => b.amount - a.amount);
 
         sortedBudgetItems.forEach(item => {
@@ -1181,7 +1197,6 @@
             semaphoreList.appendChild(catRow);
         });
 
-        // Mostrar también categorías que tuvieron gastos este mes pero no tenían presupuesto fijado
         Object.keys(catSpent).forEach(cat => {
             if (!budgetedCatsSet.has(cat) && catSpent[cat] > 0) {
                 const spent = catSpent[cat];
@@ -1250,9 +1265,6 @@
 
         const sortedMonths = Object.keys(monthlyData).sort();
         const totals = sortedMonths.map(m => Math.round(monthlyData[m].total));
-        const franTotals = sortedMonths.map(m => Math.round(monthlyData[m].fran));
-        const agusTotals = sortedMonths.map(m => Math.round(monthlyData[m].agus));
-        const sharedTotals = sortedMonths.map(m => Math.round(monthlyData[m].compartido));
 
         const grandTotal = totals.reduce((acc, curr) => acc + curr, 0);
         const numMonths = sortedMonths.length || 1;
@@ -1344,34 +1356,6 @@
                 </div>
             `;
             histCatList.appendChild(row);
-        });
-
-        if (charts['chart-history-payers']) charts['chart-history-payers'].destroy();
-        charts['chart-history-payers'] = new Chart(document.getElementById('chart-history-payers'), {
-            type: 'bar',
-            data: {
-                labels: sortedMonths,
-                datasets: [
-                    { label: 'Fran', data: franTotals, backgroundColor: '#63a4d6', borderRadius: 6 },
-                    { label: 'Agus', data: agusTotals, backgroundColor: '#ff9e9e', borderRadius: 6 },
-                    { label: 'Compartido', data: sharedTotals, backgroundColor: '#a3e4d7', borderRadius: 6 }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { stacked: true },
-                    y: { 
-                        stacked: true,
-                        ticks: { callback: (v) => `$${(v / 1000000).toFixed(1)}M` }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: { label: (ctx) => ` ${ctx.dataset.label}: $${ctx.raw.toLocaleString()}` }
-                    }
-                }
-            }
         });
 
         const tableBody = document.getElementById('history-table-body');
