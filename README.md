@@ -1,4 +1,4 @@
-# ⚡ KodaCoin — Seguimiento de gastos
+# 🐶 KodaCoin — Seguimiento de gastos
 
 Aplicación web para el control y análisis de gastos personales o en pareja, diseñada para eliminar la carga manual mediante automatización e integración de APIs.
 
