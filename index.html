@@ -51,6 +51,36 @@
         .summary-card { text-align: center; border: 2px solid var(--primary); }
         .balance-amount { font-size: 32px; font-weight: 800; color: var(--primary-dark); }
         
+        /* Pantalla de Bloqueo por PIN */
+        .pin-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+        .pin-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px 24px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            text-align: center;
+            border: 2px solid #e1ecf4;
+        }
+        .pin-input {
+            text-align: center;
+            letter-spacing: 8px;
+            font-size: 24px !important;
+            font-weight: 800 !important;
+            padding: 14px !important;
+            margin-top: 10px;
+        }
+
         /* Selector de 3 pestañas estilo iOS */
         .tab-switcher {
             display: flex;
@@ -210,10 +240,29 @@
     </style>
 </head>
 <body>
-<div class="app-container">
+
+<!-- PANTALLA DE BLOQUEO POR PIN -->
+<div id="pin-overlay" class="pin-overlay">
+    <div class="pin-card">
+        <img src="kodacoin.png" alt="KodaCoin" style="width: 68px; height: auto; border-radius: 50%; margin-bottom: 8px;">
+        <h2 style="color: var(--primary-dark); margin-bottom: 6px;">KodaCoin 🔒</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 0; margin-bottom: 14px;">Ingresá tu PIN de seguridad para acceder a tus gastos</p>
+        <form id="pin-form">
+            <input type="password" id="pin-input" class="pin-input" inputmode="numeric" placeholder="••••" required autocomplete="off">
+            <button type="submit" class="btn-submit" id="pin-submit-btn">Desbloquear</button>
+        </form>
+        <p id="pin-error" style="color: var(--status-red); font-size: 13px; font-weight: 700; margin-top: 12px; margin-bottom: 0; display: none;">
+            ❌ PIN incorrecto. Intentá nuevamente.
+        </p>
+    </div>
+</div>
+
+<div class="app-container" id="main-app" style="display: none;">
     
-    <div style="text-align: center; margin-top: 10px; margin-bottom: 5px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; margin-bottom: 5px;">
+        <div style="width: 38px;"></div>
         <img src="kodacoin.png" alt="logo KodaCoin" style="width: 70px; height: auto; border-radius: 50%;">
+        <button onclick="lockApp()" title="Bloquear aplicación" style="background: #ffffff; border: 1px solid #e1ecf4; border-radius: 12px; width: 38px; height: 38px; cursor: pointer; font-size: 16px;">🔒</button>
     </div>
     
     <h1 style="text-align:center; color: var(--primary-dark); margin-top: 5px; margin-bottom: 15px;">KodaCoin 🐾</h1>
@@ -467,10 +516,11 @@
     let selectedCategoryFilter = null; 
     let selectedPayerFilter = null;
     let currentTab = 'monthly';
+    let currentPin = localStorage.getItem('kodacoin_pin') || '';
+
     const monthFilter = document.getElementById('month-filter');
     const searchInput = document.getElementById('search-input');
 
-    // Todas las categorías de KodaCoin
     const ALL_CATEGORIES = [
         "Verdulería/Carniceria", "Almuerzo oficina", "Casa", "Auto", "Super", 
         "Delivery", "Farmacia", "Gastos varios", "Comer afuera", "Servicios", 
@@ -478,7 +528,6 @@
         "Suscripciones", "Gimnasio/Salud", "Panaderia", "Koda"
     ];
 
-    // Valores de respaldo iniciales iguales a tu hoja 'Presupuestos' ($3.000.000)
     let budgetItemsList = [
         { category: "Panaderia", amount: 60000, percentage: 2.00 },
         { category: "Farmacia", amount: 60000, percentage: 2.00 },
@@ -542,8 +591,40 @@
         localStorage.removeItem('kodacoin_user_budgets');
         localStorage.removeItem('kodacoin_budget_items_v2');
         document.getElementById('date').valueAsDate = new Date();
-        loadData();
+
+        if (currentPin) {
+            document.getElementById('pin-overlay').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            loadData();
+        } else {
+            document.getElementById('pin-overlay').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+        }
     });
+
+    // Envío del formulario de PIN
+    document.getElementById('pin-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const inputVal = document.getElementById('pin-input').value.trim();
+        if (!inputVal) return;
+
+        currentPin = inputVal;
+        document.getElementById('pin-error').style.display = 'none';
+        const btn = document.getElementById('pin-submit-btn');
+        btn.innerText = 'Verificando...';
+        btn.disabled = true;
+
+        loadData(true);
+    });
+
+    function lockApp() {
+        localStorage.removeItem('kodacoin_pin');
+        currentPin = '';
+        document.getElementById('pin-input').value = '';
+        document.getElementById('pin-error').style.display = 'none';
+        document.getElementById('main-app').style.display = 'none';
+        document.getElementById('pin-overlay').style.display = 'flex';
+    }
 
     function switchTab(tab) {
         currentTab = tab;
@@ -565,7 +646,7 @@
         if (tab === 'history') renderHistoricalComparison();
     }
 
-    document.getElementById('btn-refresh').addEventListener('click', loadData);
+    document.getElementById('btn-refresh').addEventListener('click', () => loadData(false));
     monthFilter.addEventListener('change', () => {
         selectedCategoryFilter = null; 
         selectedPayerFilter = null;
@@ -601,12 +682,6 @@
                 syncBadge.style.color = '#2b8a3e';
                 syncBadge.innerText = '☁️ Sincronizado con hoja "Presupuestos"';
             }
-        } else if (Array.isArray(data)) {
-            if (syncBadge) {
-                syncBadge.style.background = '#fff3bf';
-                syncBadge.style.color = '#e67700';
-                syncBadge.innerText = '⚠️ El script de Google aún está en versión vieja (Implementar -> Nueva versión)';
-            }
         }
     }
 
@@ -617,9 +692,13 @@
             syncBadge.style.color = 'var(--primary-dark)';
             syncBadge.innerText = '⏳ Leyendo hoja "Presupuestos"...';
         }
-        fetch(scriptURL + '?nosync=1&t=' + Date.now())
+        fetch(scriptURL + '?nosync=1&pin=' + encodeURIComponent(currentPin) + '&t=' + Date.now())
             .then(res => res.json())
             .then(data => {
+                if (data && data.error === 'unauthorized') {
+                    lockApp();
+                    return;
+                }
                 applyBudgetDataFromServer(data);
                 renderBudgetSection();
                 if (document.getElementById('budget-config-panel').style.display !== 'none') {
@@ -629,11 +708,33 @@
             .catch(err => console.error(err));
     }
 
-    function loadData() {
+    function loadData(fromPinScreen = false) {
         const list = document.getElementById('tx-list');
         list.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Cargando y sincronizando datos...</p>';
         
-        fetch(scriptURL + '?t=' + Date.now()).then(res => res.json()).then(data => {
+        const url = scriptURL + '?pin=' + encodeURIComponent(currentPin) + (fromPinScreen ? '&nosync=1' : '') + '&t=' + Date.now();
+
+        fetch(url).then(res => res.json()).then(data => {
+            const btnPin = document.getElementById('pin-submit-btn');
+            if (btnPin) {
+                btnPin.innerText = 'Desbloquear';
+                btnPin.disabled = false;
+            }
+
+            if (data && data.error === 'unauthorized') {
+                localStorage.removeItem('kodacoin_pin');
+                currentPin = '';
+                document.getElementById('main-app').style.display = 'none';
+                document.getElementById('pin-overlay').style.display = 'flex';
+                document.getElementById('pin-error').style.display = 'block';
+                return;
+            }
+
+            // PIN válido: guardamos sesión y mostramos app
+            localStorage.setItem('kodacoin_pin', currentPin);
+            document.getElementById('pin-overlay').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+
             const rawExpenses = Array.isArray(data) ? data : (data.expenses || []);
             
             expenses = rawExpenses.map((tx, idx) => ({
@@ -673,6 +774,11 @@
             if (currentTab === 'budget') renderBudgetSection();
             if (currentTab === 'history') renderHistoricalComparison();
         }).catch(err => {
+            const btnPin = document.getElementById('pin-submit-btn');
+            if (btnPin) {
+                btnPin.innerText = 'Desbloquear';
+                btnPin.disabled = false;
+            }
             list.innerHTML = '<p style="text-align:center; color:var(--expense); font-weight:700;">Error al conectar con Google Sheets.</p>';
             console.error(err);
         });
@@ -689,6 +795,7 @@
             fetch(scriptURL, {
                 method: 'POST',
                 body: JSON.stringify({ 
+                    pin: currentPin,
                     action: 'edit', 
                     id: tx.id, 
                     date: tx.date, 
@@ -718,7 +825,7 @@
             
             fetch(scriptURL, { 
                 method: 'POST', 
-                body: JSON.stringify({ action: 'edit', id: editingId, date, desc, category, account, amount, payer }) 
+                body: JSON.stringify({ pin: currentPin, action: 'edit', id: editingId, date, desc, category, account, amount, payer }) 
             });
             
             editingId = null;
@@ -730,7 +837,7 @@
             
             expenses.push(tx); 
             updateUI();
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify(tx) });
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify({ ...tx, pin: currentPin }) });
         }
         
         this.reset(); 
@@ -757,7 +864,7 @@
         if (confirm('¿Seguro que querés borrar este gasto?')) {
             expenses = expenses.filter(tx => tx.id.toString() !== id.toString());
             updateUI();
-            fetch(scriptURL, { method: 'POST', body: JSON.stringify({ action: 'delete', id: id }) });
+            fetch(scriptURL, { method: 'POST', body: JSON.stringify({ pin: currentPin, action: 'delete', id: id }) });
             if(editingId && editingId.toString() === id.toString()) {
                 editingId = null;
                 document.getElementById('tx-form').reset();
@@ -1100,6 +1207,7 @@
         });
 
         const payload = {
+            pin: currentPin,
             action: 'saveBudgets',
             total: budgetTotalSum,
             items: budgetItemsList.map(item => ({
